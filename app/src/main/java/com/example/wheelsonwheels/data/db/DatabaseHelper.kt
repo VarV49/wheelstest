@@ -74,7 +74,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_LISTING_PRICE INTEGER NOT NULL,
                 $COL_LISTING_CONDITION TEXT NOT NULL,
                 $COL_LISTING_STOCK INTEGER NOT NULL,
-                $COL_LISTING_CREATED_AT TEXT NOT NULL
+                $COL_LISTING_CREATED_AT INTEGER NOT NULL
             )
         """.trimIndent()
 
@@ -86,7 +86,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_ORDER_TOTAL INTEGER NOT NULL,
                 $COL_ORDER_PAYMENT_METHOD TEXT NOT NULL,
                 $COL_ORDER_SHIPPING_INFO TEXT NOT NULL,
-                $COL_ORDER_CREATED_AT TEXT NOT NULL
+                $COL_ORDER_CREATED_AT INTEGER NOT NULL
             )
         """.trimIndent()
 
@@ -176,12 +176,41 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 price = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
                 condition = ItemCondition.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION))),
                 stock = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_STOCK)),
-                createdAt = DateFormat.getDateInstance().parse(cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CREATED_AT)))
+                createdAt = Date(cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_CREATED_AT)))
             )
         } else null
         cursor.close()
         db.close()
         return listing
+    }
+
+    fun addListing(
+        id: Long,
+        sellerID: Long,
+        title: String,
+        description: String,
+        category: String,
+        price: Long,
+        condition: ItemCondition,
+        stock: Long,
+        createdAt: Date
+    ): Result<Unit> {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COL_LISTING_ID, id)
+            put(COL_LISTING_SELLER_ID, sellerID)
+            put(COL_LISTING_TITLE, title)
+            put(COL_LISTING_DESCRIPTION, description)
+            put(COL_LISTING_CATEGORY, category)
+            put(COL_LISTING_PRICE, price)
+            put(COL_LISTING_CONDITION, condition.toString())
+            put(COL_LISTING_STOCK, stock)
+            put(COL_LISTING_CREATED_AT, createdAt.time)
+        }
+        val result = db.insert(TABLE_LISTINGS, null, values)
+        db.close()
+        return if (result != -1L) Result.success(Unit)
+        else Result.failure(Exception("Failed to add listing."))
     }
 
     // -------- ORDER TABLE --------
