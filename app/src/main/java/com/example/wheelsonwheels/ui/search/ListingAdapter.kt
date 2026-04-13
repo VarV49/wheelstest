@@ -22,7 +22,7 @@ class ListingAdapter(private val listings: List<Listing>) :
 
         holder.listingName.text = listing.title
         holder.listingCategory.text = listing.category
-        holder.listingPrice.text = "%,.2f".format(listing.price)
+        holder.listingPrice.text = listing.price.toString()//"%,.2f".format(listing.price)
 
         // photos not implemented yet. need to figure out how we can store them if we do add
         //if(listing.photos[0] != null)

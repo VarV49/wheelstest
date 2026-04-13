@@ -186,12 +186,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun getAllListings(): ArrayList<Listing> {
         val db = readableDatabase
-        val cursor = db.query(
+        val cursor = db.rawQuery("select * from $TABLE_LISTINGS", null)
+        /*val cursor = db.query(
             TABLE_LISTINGS, null,
             "$COL_LISTING_ID IS NOT NULL",
             null,
             null, null, null
-        )
+        )*/
         val listings: ArrayList<Listing> = arrayListOf()
         if(cursor.moveToFirst()) {
             do {
