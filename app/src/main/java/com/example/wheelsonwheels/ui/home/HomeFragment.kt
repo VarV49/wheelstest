@@ -53,7 +53,7 @@ class HomeFragment : Fragment() {
         // These navigate to your teammates' fragments
         // They just need to add the destinations to nav_graph.xml
         btnBrowse.setOnClickListener {
-            // findNavController().navigate(R.id.action_home_to_search)
+            findNavController().navigate(R.id.action_home_to_search)
         }
 
         btnCart.setOnClickListener {

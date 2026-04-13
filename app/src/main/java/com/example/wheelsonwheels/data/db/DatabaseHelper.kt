@@ -184,6 +184,37 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return listing
     }
 
+    fun getAllListings(): ArrayList<Listing> {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_LISTINGS, null,
+            "$COL_LISTING_ID IS NOT NULL",
+            null,
+            null, null, null
+        )
+        val listings: ArrayList<Listing> = arrayListOf()
+        if(cursor.moveToFirst()) {
+            do {
+                listings.add(
+                    Listing(
+                        id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
+                        sellerID = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID)),
+                        title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
+                        description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESCRIPTION)),
+                        category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
+                        price = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
+                        condition = ItemCondition.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION))),
+                        stock = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_STOCK)),
+                        createdAt = Date(cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_CREATED_AT)))
+                    )
+                )
+            } while(cursor.moveToNext());
+        }
+        cursor.close()
+        db.close()
+        return listings
+    }
+
     fun addListing(
         id: Long,
         sellerID: Long,
