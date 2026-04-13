@@ -8,6 +8,18 @@ import com.example.wheelsonwheels.data.model.User
 import com.example.wheelsonwheels.data.model.UserRole
 import java.security.MessageDigest
 
+
+const val TABLE_LISTINGS = "listings"
+const val COL_LISTING_ID = "id"
+const val COL_LISTING_TITLE = "title"
+const val COL_LISTING_DESC = "description"
+const val COL_LISTING_PRICE = "price"
+const val COL_LISTING_CATEGORY = "category"
+const val COL_LISTING_CONDITION = "condition"
+const val COL_LISTING_SELLER_ID = "seller_id"
+
+
+
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     context, DATABASE_NAME, null, DATABASE_VERSION
 ) {
@@ -35,7 +47,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """.trimIndent()
 
+
+        val createListings = """
+            CREATE TABLE $TABLE_LISTINGS (
+                $COL_LISTING_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_LISTING_TITLE TEXT NOT NULL,
+                $COL_LISTING_DESC TEXT NOT NULL,
+                $COL_LISTING_PRICE REAL NOT NULL,
+                $COL_LISTING_CATEGORY TEXT NOT NULL,
+                $COL_LISTING_CONDITION TEXT NOT NULL,
+                $COL_LISTING_SELLER_ID INTEGER NOT NULL
+            )
+        """.trimIndent()
+
         db.execSQL(createUsers)
+        db.execSQL(createListings)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -96,4 +122,69 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             Result.failure(Exception("Incorrect password."))
         }
     }
+}
+
+fun addListing(listing: Listing): Result<Unit> {
+    val db = writableDatabase
+    val values = ContentValues().apply {
+        put(COL_LISTING_TITLE, listing.title)
+        put(COL_LISTING_DESC, listing.description)
+        put(COL_LISTING_PRICE, listing.price)
+        put(COL_LISTING_CATEGORY, listing.category)
+        put(COL_LISTING_CONDITION, listing.condition)
+        put(COL_LISTING_SELLER_ID, listing.sellerId)
+    }
+    val result = db.insert(TABLE_LISTINGS, null, values)
+    db.close()
+    return if (result != -1L) Result.success(Unit)
+    else Result.failure(Exception("Failed to create listing."))
+}
+
+fun getListingsBySeller(sellerId: Long): List<Listing> {
+    val db = readableDatabase
+    val cursor = db.query(
+        TABLE_LISTINGS, null,
+        "$COL_LISTING_SELLER_ID = ?",
+        arrayOf(sellerId.toString()),
+        null, null, null
+    )
+    val listings = mutableListOf<Listing>()
+    while (cursor.moveToNext()) {
+        listings.add(
+            Listing(
+                id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
+                title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
+                price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
+                category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
+                condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
+                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+            )
+        )
+    }
+    cursor.close()
+    db.close()
+    return listings
+}
+
+fun getAllListings(): List<Listing> {
+    val db = readableDatabase
+    val cursor = db.query(TABLE_LISTINGS, null, null, null, null, null, null)
+    val listings = mutableListOf<Listing>()
+    while (cursor.moveToNext()) {
+        listings.add(
+            Listing(
+                id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
+                title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
+                description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
+                price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
+                category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
+                condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
+                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+            )
+        )
+    }
+    cursor.close()
+    db.close()
+    return listings
 }
