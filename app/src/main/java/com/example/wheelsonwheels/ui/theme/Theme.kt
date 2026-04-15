@@ -13,13 +13,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 // -------------------- COLORS --------------------
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF1A2DD5),
+    primary = Color(0xFFD92E3E),
     onPrimary = Color.White,
 
-    secondary = Color(0xFFFF6F00),
+    secondary = Color(0xFF1485E1),
     onSecondary = Color.White,
 
-    background = Color(0xFFF5F5F5),
+    background = Color(0xFFFFFFFF),
     onBackground = Color(0xFF111111),
 
     surface = Color.White,

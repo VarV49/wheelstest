@@ -50,6 +50,8 @@ fun HomeScreen(
             style = MaterialTheme.typography.titleLarge
         )
 
+        Spacer(Modifier.height(5.dp))
+
         Text(
             text = "Role: ${user?.role?.name ?: ""}",
             style = MaterialTheme.typography.bodyMedium,

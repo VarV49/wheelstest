@@ -1,5 +1,6 @@
 package com.example.wheelsonwheels.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -7,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -14,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wheelsonwheels.viewmodel.AuthState
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
+import com.example.wheelsonwheels.R
 
 @Composable
 fun LoginScreen(
@@ -37,12 +40,21 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
+        Image(
+            painter = painterResource(id = R.drawable.wow_launcher),
+            contentDescription = "Wheels on Wheels logo",
+            modifier = Modifier
+                .size(270.dp)
+                .padding(0.dp)
+        )
+
+        // Replaced by logo image
+        /*Text(
             text = "Wheels on Wheels",
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 32.dp)
-        )
+        )*/
 
         OutlinedTextField(
             value = email,
