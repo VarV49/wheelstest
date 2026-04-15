@@ -59,15 +59,15 @@ fun HomeScreen(
         Spacer(Modifier.height(20.dp))
 
         // DASHBOARD CARDS
-        //DashboardCard("Browse Listings", onBrowse)
-        //DashboardCard("My Cart", onCart)
-        //DashboardCard("My Orders", onOrders)
+        DashboardCard("Browse Listings", "onBrowse", onBrowse)
+        DashboardCard("My Cart", "onCart", onCart)
+        DashboardCard("My Orders", "onOrders", onOrders)
 
         Spacer(Modifier.height(16.dp))
 
         // SELLER ONLY
         if (user?.role == UserRole.SELLER || user?.role == UserRole.ADMIN) {
-            DashboardCard("Create Listing", onCreateListing)
+            DashboardCard("Create Listing", "onCreateListing", onCreateListing)
         }
 
         Spacer(Modifier.weight(1f))

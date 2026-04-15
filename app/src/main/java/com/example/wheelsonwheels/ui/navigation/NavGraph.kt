@@ -14,6 +14,10 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
     const val CREATE_LISTING = "create_listing"
+
+    const val ORDERS = "orders"
+    const val CART = "cart"
+    const val BROWSE = "browse"
 }
 
 @Composable
@@ -72,5 +76,19 @@ fun NavGraph(
                 onBack = { navController.popBackStack() }
             )
         }
+
+        //composable(Routes.CART) {
+        //
+        //}
+
+        //composable(Routes.BROWSE) {
+        //
+        //}
+
+        //composable(Routes.ORDERS) {
+        //
+        //}
+
+
     }
 }
