@@ -25,10 +25,10 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     var currentUser: User? = null
         private set
 
-    fun register(name: String, email: String, password: String, role: UserRole) {
+    fun register(name: String, email: String, password: String, userRole : String) {
         if (!validateRegisterInputs(name, email, password)) return
         _authState.value = AuthState.Loading
-        val result = db.addUser(name, email, password, role)
+        val result = db.addUser(name, email, password, userRole)
         if (result.isSuccess) {
             val loginResult = db.login(email, password)
             if (loginResult.isSuccess) {
@@ -59,7 +59,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         _authState.value = AuthState.Idle
     }
 
-    private fun validateRegisterInputs(name: String, email: String, password: String): Boolean {
+    fun validateRegisterInputs(name: String, email: String, password: String): Boolean {
         if (name.isBlank()) {
             _authState.value = AuthState.Error("Name is required.")
             return false
@@ -89,5 +89,23 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             return false
         }
         return true
+    }
+    fun switchRole() {
+        val user = currentUser ?: return
+
+        val newRole = when (user.role) {
+            UserRole.BUYER -> UserRole.SELLER
+            UserRole.SELLER -> UserRole.BUYER
+            else -> UserRole.BUYER
+        }
+
+        val success = db.updateUserRole(user.id, newRole.name)
+
+        if (success) {
+            currentUser = user.copy(role = newRole)
+            _authState.value = AuthState.Success(currentUser!!)
+        } else {
+            _authState.value = AuthState.Error("Failed to switch role.")
+        }
     }
 }

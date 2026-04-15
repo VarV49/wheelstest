@@ -1,58 +1,94 @@
 package com.example.wheelsonwheels.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
+// -------------------- COLORS --------------------
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+private val LightColors = lightColorScheme(
+    primary = Color(0xFF1A2DD5),
     onPrimary = Color.White,
+
+    secondary = Color(0xFFFF6F00),
     onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+
+    background = Color(0xFFF5F5F5),
+    onBackground = Color(0xFF111111),
+
+    surface = Color.White,
+    onSurface = Color.Black,
+
+    error = Color(0xFFB00020)
 )
+
+private val DarkColors = darkColorScheme(
+    primary = Color(0xFF42A5F5),
+    onPrimary = Color.Black,
+
+    secondary = Color(0xFFFFB74D),
+    onSecondary = Color.Black,
+
+    background = Color(0xFF121212),
+    onBackground = Color.White,
+
+    surface = Color(0xFF1E1E1E),
+    onSurface = Color.White,
+
+    error = Color(0xFFCF6679)
+)
+
+// -------------------- TYPOGRAPHY --------------------
+
+val AppTypography = Typography(
+    titleLarge = TextStyle(
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Bold
+    ),
+    titleMedium = TextStyle(
+        fontSize = 20.sp,
+        fontWeight = FontWeight.SemiBold
+    ),
+    bodyLarge = TextStyle(
+        fontSize = 16.sp
+    ),
+    bodyMedium = TextStyle(
+        fontSize = 14.sp
+    ),
+    labelLarge = TextStyle(
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Medium
+    )
+)
+
+// -------------------- SHAPES --------------------
+
+val AppShapes = Shapes(
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(24.dp)
+)
+
+// -------------------- THEME --------------------
 
 @Composable
 fun WheelsOnWheelsTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+    val isDarkTheme = isSystemInDarkTheme()
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colors = if (isDarkTheme) DarkColors else LightColors
 
     MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
+        colorScheme = colors,
+        typography = AppTypography,
+        shapes = AppShapes,
         content = content
     )
 }
