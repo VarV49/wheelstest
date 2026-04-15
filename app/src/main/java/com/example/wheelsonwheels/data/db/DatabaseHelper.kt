@@ -6,8 +6,8 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.example.wheelsonwheels.data.model.User
 import com.example.wheelsonwheels.data.model.UserRole
+import com.example.wheelsonwheels.data.model.Listing
 import java.security.MessageDigest
-
 
 const val TABLE_LISTINGS = "listings"
 const val COL_LISTING_ID = "id"
@@ -18,15 +18,13 @@ const val COL_LISTING_CATEGORY = "category"
 const val COL_LISTING_CONDITION = "condition"
 const val COL_LISTING_SELLER_ID = "seller_id"
 
-
-
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     context, DATABASE_NAME, null, DATABASE_VERSION
 ) {
 
     companion object {
         const val DATABASE_NAME = "WheelsOnWheels.db"
-        const val DATABASE_VERSION = 1
+        const val DATABASE_VERSION = 2
 
         const val TABLE_USERS = "users"
         const val COL_USER_ID = "id"
@@ -47,7 +45,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             )
         """.trimIndent()
 
-
         val createListings = """
             CREATE TABLE $TABLE_LISTINGS (
                 $COL_LISTING_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,6 +63,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLE_LISTINGS")
         onCreate(db)
     }
 
@@ -74,7 +72,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    fun addUser(name: String, email: String, password: String, role: UserRole): Result<Unit> {
+    fun addUser(name: String, email: String, password: String, userRole: String): Result<Unit> {
         if (getUserByEmail(email) != null) {
             return Result.failure(Exception("Email already in use."))
         }
@@ -83,7 +81,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_USER_NAME, name)
             put(COL_USER_EMAIL, email)
             put(COL_USER_PASSWORD, hashPassword(password))
-            put(COL_USER_ROLE, role.name)
+            put(COL_USER_ROLE, userRole)
         }
         val result = db.insert(TABLE_USERS, null, values)
         db.close()
@@ -122,69 +120,87 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             Result.failure(Exception("Incorrect password."))
         }
     }
-}
 
-fun addListing(listing: Listing): Result<Unit> {
-    val db = writableDatabase
-    val values = ContentValues().apply {
-        put(COL_LISTING_TITLE, listing.title)
-        put(COL_LISTING_DESC, listing.description)
-        put(COL_LISTING_PRICE, listing.price)
-        put(COL_LISTING_CATEGORY, listing.category)
-        put(COL_LISTING_CONDITION, listing.condition)
-        put(COL_LISTING_SELLER_ID, listing.sellerId)
+    fun addListing(listing: Listing): Result<Unit> {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COL_LISTING_TITLE, listing.title)
+            put(COL_LISTING_DESC, listing.description)
+            put(COL_LISTING_PRICE, listing.price)
+            put(COL_LISTING_CATEGORY, listing.category)
+            put(COL_LISTING_CONDITION, listing.condition)
+            put(COL_LISTING_SELLER_ID, listing.sellerId)
+        }
+        val result = db.insert(TABLE_LISTINGS, null, values)
+        db.close()
+        return if (result != -1L) Result.success(Unit)
+        else Result.failure(Exception("Failed to create listing."))
     }
-    val result = db.insert(TABLE_LISTINGS, null, values)
-    db.close()
-    return if (result != -1L) Result.success(Unit)
-    else Result.failure(Exception("Failed to create listing."))
-}
 
-fun getListingsBySeller(sellerId: Long): List<Listing> {
-    val db = readableDatabase
-    val cursor = db.query(
-        TABLE_LISTINGS, null,
-        "$COL_LISTING_SELLER_ID = ?",
-        arrayOf(sellerId.toString()),
-        null, null, null
-    )
-    val listings = mutableListOf<Listing>()
-    while (cursor.moveToNext()) {
-        listings.add(
-            Listing(
-                id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
-                title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
-                description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
-                price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
-                category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
-                condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
-                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
-            )
+    fun getListingsBySeller(sellerId: Long): List<Listing> {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_LISTINGS, null,
+            "$COL_LISTING_SELLER_ID = ?",
+            arrayOf(sellerId.toString()),
+            null, null, null
         )
-    }
-    cursor.close()
-    db.close()
-    return listings
-}
-
-fun getAllListings(): List<Listing> {
-    val db = readableDatabase
-    val cursor = db.query(TABLE_LISTINGS, null, null, null, null, null, null)
-    val listings = mutableListOf<Listing>()
-    while (cursor.moveToNext()) {
-        listings.add(
-            Listing(
-                id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
-                title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
-                description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
-                price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
-                category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
-                condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
-                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+        val listings = mutableListOf<Listing>()
+        while (cursor.moveToNext()) {
+            listings.add(
+                Listing(
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
+                    title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
+                    description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
+                    price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
+                    category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
+                    condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
+                    sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+                )
             )
-        )
+        }
+        cursor.close()
+        db.close()
+        return listings
     }
-    cursor.close()
-    db.close()
-    return listings
+
+    fun getAllListings(): List<Listing> {
+        val db = readableDatabase
+        val cursor = db.query(TABLE_LISTINGS, null, null, null, null, null, null)
+        val listings = mutableListOf<Listing>()
+        while (cursor.moveToNext()) {
+            listings.add(
+                Listing(
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_ID)),
+                    title = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_TITLE)),
+                    description = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_DESC)),
+                    price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
+                    category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
+                    condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
+                    sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+                )
+            )
+        }
+        cursor.close()
+        db.close()
+        return listings
+    }
+
+    fun updateUserRole(userId: Long, newRole: String): Boolean {
+        val db = writableDatabase
+
+        val values = ContentValues().apply {
+            put(COL_USER_ROLE, newRole)
+        }
+
+        val result = db.update(
+            TABLE_USERS,
+            values,
+            "$COL_USER_ID = ?",
+            arrayOf(userId.toString())
+        )
+
+        db.close()
+        return result > 0
+    }
 }

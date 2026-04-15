@@ -14,20 +14,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wheelsonwheels.viewmodel.AuthState
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
+import androidx.compose.material3.ExperimentalMaterial3Api
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun RegisterScreen(
     authViewModel: AuthViewModel,
-    onLoginSuccess: () -> Unit,
-    onGoToRegister: () -> Unit
+    onRegisterSuccess: () -> Unit,
+    onGoToLogin: () -> Unit
 ) {
+    var name by remember { mutableStateOf("")}
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val userRole: String = "BUYER"
 
     val authState by authViewModel.authState.observeAsState()
 
     LaunchedEffect(authState) {
-        if (authState is AuthState.Success) onLoginSuccess()
+        if (authState is AuthState.Success) onRegisterSuccess()
     }
 
     Column(
@@ -38,10 +42,17 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Wheels on Wheels",
+            text = "Register",
             fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it},
+            label = { Text("Username") },
+            modifier = Modifier.fillMaxWidth()
         )
 
         OutlinedTextField(
@@ -77,15 +88,15 @@ fun LoginScreen(
             CircularProgressIndicator()
         } else {
             Button(
-                onClick = { authViewModel.login(email.trim(), password) },
+                onClick = { authViewModel.register(name.trim(), email.trim(), password, userRole) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Log In")
+                Text("Create Account")
+            }
+            TextButton(onClick = onGoToLogin) {
+                Text("Already have an account? Login")
             }
         }
 
-        TextButton(onClick = onGoToRegister) {
-            Text("Don't have an account? Register")
-        }
     }
 }
