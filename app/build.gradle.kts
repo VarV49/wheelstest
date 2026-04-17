@@ -41,14 +41,13 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.7")
+    implementation("com.google.android.material:material:1.11.0")
 
     // Compose BOM
-    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    implementation(platform("androidx.compose:compose-bom:2024.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("com.google.android.material:material:1.11.0")
 
     // Compose Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")

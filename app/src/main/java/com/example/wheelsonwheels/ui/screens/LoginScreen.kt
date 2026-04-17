@@ -17,6 +17,9 @@ import androidx.compose.ui.unit.sp
 import com.example.wheelsonwheels.viewmodel.AuthState
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun LoginScreen(
@@ -42,10 +45,7 @@ fun LoginScreen(
     ) {
         Image(
             painter = painterResource(id = R.drawable.wow_launcher),
-            contentDescription = "Wheels on Wheels logo",
-            modifier = Modifier
-                .size(270.dp)
-                .padding(0.dp)
+            contentDescription = null
         )
 
         // Replaced by logo image

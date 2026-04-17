@@ -7,6 +7,11 @@ import androidx.lifecycle.MutableLiveData
 import com.example.wheelsonwheels.data.db.DatabaseHelper
 import com.example.wheelsonwheels.data.model.User
 import com.example.wheelsonwheels.data.model.UserRole
+import kotlinx.coroutines.*
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -44,13 +49,23 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     fun login(email: String, password: String) {
         if (!validateLoginInputs(email, password)) return
+
         _authState.value = AuthState.Loading
-        val result = db.login(email, password)
-        if (result.isSuccess) {
-            currentUser = result.getOrNull()
-            _authState.value = AuthState.Success(currentUser!!)
-        } else {
-            _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Login failed.")
+
+        viewModelScope.launch {
+
+            val result = withContext(Dispatchers.IO) {
+                db.login(email, password)
+            }
+
+            val user = result.getOrNull()
+
+            if (user != null) {
+                currentUser = user
+                _authState.value = AuthState.Success(user)
+            } else {
+                _authState.value = AuthState.Error("Login failed.")
+            }
         }
     }
 

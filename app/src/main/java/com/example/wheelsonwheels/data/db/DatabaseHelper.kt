@@ -24,7 +24,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "WheelsOnWheels.db"
-        const val DATABASE_VERSION = 2
+        const val DATABASE_VERSION = 3
 
         const val TABLE_USERS = "users"
         const val COL_USER_ID = "id"
@@ -91,23 +91,33 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     fun getUserByEmail(email: String): User? {
         val db = readableDatabase
-        val cursor = db.query(
-            TABLE_USERS, null,
-            "$COL_USER_EMAIL = ?",
-            arrayOf(email),
-            null, null, null
+
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_USERS WHERE $COL_USER_EMAIL = ?",
+            arrayOf(email)
         )
-        val user = if (cursor.moveToFirst()) {
-            User(
+
+        var user: User? = null
+
+        if (cursor.moveToFirst()) {
+            user = User(
                 id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_USER_ID)),
                 name = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_NAME)),
                 email = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_EMAIL)),
                 passwordHash = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PASSWORD)),
-                role = UserRole.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_ROLE)))
+                role = try {
+                    UserRole.valueOf(
+                        cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_ROLE)).uppercase()
+                    )
+                } catch (e: Exception) {
+                    UserRole.BUYER
+                }
             )
-        } else null
+        }
+
         cursor.close()
         db.close()
+
         return user
     }
 
