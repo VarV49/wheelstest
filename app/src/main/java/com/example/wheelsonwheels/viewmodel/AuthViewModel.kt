@@ -12,6 +12,11 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -23,12 +28,12 @@ sealed class AuthState {
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     private val db = DatabaseHelper(app)
+    var currentUser: User? by mutableStateOf(null)
+        private set
 
     private val _authState = MutableLiveData<AuthState>(AuthState.Idle)
     val authState: LiveData<AuthState> = _authState
 
-    var currentUser: User? = null
-        private set
 
     fun register(name: String, email: String, password: String, userRole : String) {
         if (!validateRegisterInputs(name, email, password)) return
@@ -105,22 +110,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
         return true
     }
-    fun switchRole() {
+    fun updateUserRole(newRole: UserRole) {
         val user = currentUser ?: return
 
-        val newRole = when (user.role) {
-            UserRole.BUYER -> UserRole.SELLER
-            UserRole.SELLER -> UserRole.BUYER
-            else -> UserRole.BUYER
-        }
-
-        val success = db.updateUserRole(user.id, newRole.name)
+        val success = db.updateUserRole(user.id, newRole)
 
         if (success) {
             currentUser = user.copy(role = newRole)
-            _authState.value = AuthState.Success(currentUser!!)
-        } else {
-            _authState.value = AuthState.Error("Failed to switch role.")
         }
     }
 }

@@ -11,6 +11,7 @@ import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.ui.components.DashboardCard
 import androidx.compose.animation.*
 import androidx.compose.runtime.*
+import com.example.wheelsonwheels.ui.components.RoleToggle
 
 @Composable
 fun HomeScreen(
@@ -84,16 +85,11 @@ fun HomeScreen(
             Text("Log Out")
         }
 
-        Button(
-            onClick = { authViewModel.switchRole() },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 12.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.secondary
-            )
-        ) {
-            Text("Switch Role")
-        }
+        RoleToggle(
+            currentRole = user?.role,
+            onRoleSelected = { role ->
+                authViewModel.updateUserRole(role)
+            }
+        )
     }
 }

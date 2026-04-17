@@ -196,11 +196,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return listings
     }
 
-    fun updateUserRole(userId: Long, newRole: String): Boolean {
+    fun updateUserRole(userId: Long, newRole: UserRole): Boolean {
         val db = writableDatabase
 
         val values = ContentValues().apply {
-            put(COL_USER_ROLE, newRole)
+            put(COL_USER_ROLE, newRole.name)
         }
 
         val result = db.update(
