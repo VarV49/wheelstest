@@ -1,7 +1,6 @@
 package com.example.wheelsonwheels.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -9,13 +8,13 @@ import androidx.navigation.compose.composable
 import com.example.wheelsonwheels.ui.screens.*
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
+import com.example.wheelsonwheels.viewmodel.CartViewModel
 
 object Routes {
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
     const val CREATE_LISTING = "create_listing"
-
     const val ORDERS = "orders"
     const val CART = "cart"
     const val BROWSE = "browse"
@@ -27,6 +26,7 @@ fun NavGraph(
     authViewModel: AuthViewModel
 ) {
     val listingViewModel: ListingViewModel = viewModel()
+    val cartViewModel: CartViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = Routes.LOGIN) {
 
@@ -62,9 +62,9 @@ fun NavGraph(
                         popUpTo(Routes.HOME) { inclusive = true }
                     }
                 },
-                onBrowse = { /* teammate adds route here */ },
-                onCart = { /* teammate adds route here */ },
-                onOrders = { /* teammate adds route here */ },
+                onBrowse = { navController.navigate(Routes.BROWSE) },
+                onCart = { navController.navigate(Routes.CART) },
+                onOrders = { navController.navigate(Routes.ORDERS) },
                 onCreateListing = { navController.navigate(Routes.CREATE_LISTING) }
             )
         }
@@ -78,18 +78,33 @@ fun NavGraph(
             )
         }
 
-        //composable(Routes.CART) {
-        //
-        //}
+        composable(Routes.BROWSE) {
+            BrowseScreen(
+                authViewModel = authViewModel,
+                cartViewModel = cartViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
 
-        //composable(Routes.BROWSE) {
-        //
-        //}
+        composable(Routes.CART) {
+            CartScreen(
+                authViewModel = authViewModel,
+                cartViewModel = cartViewModel,
+                onBack = { navController.popBackStack() },
+                onCheckoutSuccess = {
+                    navController.navigate(Routes.ORDERS) {
+                        popUpTo(Routes.CART) { inclusive = true }
+                    }
+                }
+            )
+        }
 
-        //composable(Routes.ORDERS) {
-        //
-        //}
-
-
+        composable(Routes.ORDERS) {
+            OrdersScreen(
+                authViewModel = authViewModel,
+                cartViewModel = cartViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }

@@ -1,7 +1,13 @@
 package com.example.wheelsonwheels.data.model
 
 data class ShippingInfo(
-    val address: String,
-    val zipcode: Long = -1,
-    val city: String,
+    val firstName: String = "",
+    val lastName: String = "",
+    val address: String = "",
+    val addressLine2: String = "",
+    val city: String = "",
+    val state: String = "",
+    val zipcode: String = "",
+    val country: String = "United States",
+    val phone: String = ""
 )
