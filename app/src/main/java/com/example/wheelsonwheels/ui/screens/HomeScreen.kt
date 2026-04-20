@@ -274,10 +274,10 @@ private fun HomeTabContent(
             Spacer(Modifier.weight(1f))
             Spacer(Modifier.height(24.dp))
 
-            RoleToggle(
+            /*RoleToggle(
                 currentRole = user?.role,
                 onRoleSelected = { role -> authViewModel.updateUserRole(role) }
-            )
+            )*/
         }
     }
 }
@@ -319,6 +319,13 @@ private fun ProfileTabContent(
 
         Text(user?.name ?: "", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = AppColors.OffWhite)
         Text(user?.role?.name ?: "", fontSize = 13.sp, color = AppColors.GrayMuted)
+
+        Spacer(Modifier.height(40.dp))
+
+        RoleToggle(
+            currentRole = user?.role,
+            onRoleSelected = { role -> authViewModel.updateUserRole(role) }
+        )
 
         Spacer(Modifier.height(40.dp))
 

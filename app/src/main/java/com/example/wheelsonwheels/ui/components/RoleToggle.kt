@@ -2,11 +2,16 @@ package com.example.wheelsonwheels.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.wheelsonwheels.data.model.UserRole
+import com.example.wheelsonwheels.ui.theme.AppShapes
+import com.example.wheelsonwheels.ui.theme.AppTypography
+import java.time.format.TextStyle
 
 @Composable
 fun RoleToggle(
@@ -57,10 +62,23 @@ private fun RoleCircleButton(
 
     Button(
         onClick = onClick,
-        modifier = Modifier.size(90.dp),
-        shape = CircleShape,
+        modifier = Modifier.width(100.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(containerColor = containerColor)
     ) {
-        Text(text, color = contentColor)
+        Text(text,
+            color = contentColor,
+            style = MaterialTheme.typography.labelLarge
+        )
     }
+}
+
+@Preview
+@Composable
+fun previewRoleButton() {
+    RoleCircleButton(
+        "Seller",
+        true,
+        onClick = {}
+    )
 }
