@@ -1,11 +1,14 @@
 package com.example.wheelsonwheels.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.wheelsonwheels.data.db.DatabaseHelper
 import com.example.wheelsonwheels.data.model.Listing
+import java.io.File
 
 sealed class ListingState {
     object Idle : ListingState()
@@ -27,7 +30,8 @@ class ListingViewModel(app: Application) : AndroidViewModel(app) {
         price: String,
         category: String,
         condition: String,
-        sellerId: Long
+        sellerId: Long,
+        imagePath: String
     ) {
         if (!validateInputs(title, description, price, category, condition)) return
         _listingState.value = ListingState.Loading
@@ -38,7 +42,8 @@ class ListingViewModel(app: Application) : AndroidViewModel(app) {
             price = price.toDouble(),
             category = category,
             condition = condition,
-            sellerId = sellerId
+            sellerId = sellerId,
+            imagePath = imagePath
         )
 
         val result = db.addListing(listing)
@@ -78,5 +83,22 @@ class ListingViewModel(app: Application) : AndroidViewModel(app) {
             return false
         }
         return true
+    }
+
+    // Image handling
+
+    fun saveImageToInternalStorage(context: Context, uri: Uri): String {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        // image name uses global time to ensure no conflicts
+        val imageName = "image_${System.currentTimeMillis()}.jpg"
+        val file = File(context.filesDir, imageName)
+
+        inputStream?.use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        // hand back image name so that we can keep track of it
+        return imageName
     }
 }
