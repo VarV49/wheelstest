@@ -12,58 +12,100 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 
 // -------------------- COLORS --------------------
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFFD92E3E),
-    onPrimary = Color.White,
-
-    secondary = Color(0xFF1485E1),
-    onSecondary = Color.White,
-
-    background = Color(0xFFFFFFFF),
-    onBackground = Color(0xFF111111),
-
-    surface = Color.White,
-    onSurface = Color.Black,
-
-    error = Color(0xFFB00020)
-)
+object AppColors {
+    val RedPrimary  = Color(0xFFE5001C)
+    val RedMuted    = Color(0xFF8C0011)
+    val BlackDeep   = Color(0xFF0A0A0A)
+    val BlackCard   = Color(0xFF141414)
+    val BlackBorder = Color(0xFF242424)
+    val OffWhite    = Color(0xFFF0EDE8)
+    val GrayMuted   = Color(0xFF888888)
+}
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF42A5F5),
-    onPrimary = Color.Black,
+    primary            = AppColors.RedPrimary,
+    onPrimary          = Color.White,
 
-    secondary = Color(0xFFFFB74D),
-    onSecondary = Color.Black,
+    secondary          = AppColors.RedMuted,
+    onSecondary        = Color.White,
 
-    background = Color(0xFF121212),
-    onBackground = Color.White,
+    background         = AppColors.BlackDeep,
+    onBackground       = AppColors.OffWhite,
 
-    surface = Color(0xFF1E1E1E),
-    onSurface = Color.White,
+    surface            = AppColors.BlackCard,
+    onSurface          = AppColors.OffWhite,
 
-    error = Color(0xFFCF6679)
+    surfaceVariant     = AppColors.BlackBorder,
+    onSurfaceVariant   = AppColors.GrayMuted,
+
+    outline            = AppColors.BlackBorder,
+
+    error              = Color(0xFFFF3B3B),
+    onError            = Color.White
+)
+
+// Light mode mirrors the dark scheme but brightened —
+// keeps the red brand identity on white backgrounds.
+private val LightColors = lightColorScheme(
+    primary            = AppColors.RedPrimary,
+    onPrimary          = Color.White,
+
+    secondary          = AppColors.RedMuted,
+    onSecondary        = Color.White,
+
+    background         = Color(0xFFF5F2EF),
+    onBackground       = Color(0xFF0D0D0D),
+
+    surface            = Color.White,
+    onSurface          = Color(0xFF0D0D0D),
+
+    surfaceVariant     = Color(0xFFEAE7E4),
+    onSurfaceVariant   = Color(0xFF666666),
+
+    outline            = Color(0xFFD8D5D2),
+
+    error              = Color(0xFFB00020),
+    onError            = Color.White
 )
 
 // -------------------- TYPOGRAPHY --------------------
 
 val AppTypography = Typography(
-    titleLarge = TextStyle(
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold
+    headlineMedium = TextStyle(
+        fontSize = 26.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.5).sp
     ),
-    titleMedium = TextStyle(
+    headlineSmall = TextStyle(
+        fontSize = 21.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.3).sp
+    ),
+    titleLarge = TextStyle(
         fontSize = 20.sp,
         fontWeight = FontWeight.SemiBold
     ),
+    titleMedium = TextStyle(
+        fontSize = 17.sp,
+        fontWeight = FontWeight.SemiBold
+    ),
     bodyLarge = TextStyle(
-        fontSize = 16.sp
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Normal
     ),
     bodyMedium = TextStyle(
-        fontSize = 14.sp
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal
     ),
     labelLarge = TextStyle(
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium
+        fontSize = 13.sp,
+        fontWeight = FontWeight.W600,
+        letterSpacing = 0.4.sp
+    ),
+    labelSmall = TextStyle(
+        fontSize = 10.sp,
+        fontWeight = FontWeight.W700,
+        letterSpacing = 2.sp  // matches the ALL-CAPS section labels
     )
 )
 

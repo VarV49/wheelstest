@@ -55,6 +55,7 @@ dependencies {
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation(libs.androidx.compose.foundation)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
 
 

@@ -27,7 +27,13 @@ sealed class AuthState {
 
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val db = DatabaseHelper(app)
+    private lateinit var db: DatabaseHelper
+
+    init {
+        viewModelScope.launch(Dispatchers.IO) {
+            db = DatabaseHelper(app)
+        }
+    }
     var currentUser: User? by mutableStateOf(null)
         private set
 
@@ -35,20 +41,24 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     val authState: LiveData<AuthState> = _authState
 
 
-    fun register(name: String, email: String, password: String, userRole : String) {
+    fun register(name: String, email: String, password: String, userRole: String) {
         if (!validateRegisterInputs(name, email, password)) return
         _authState.value = AuthState.Loading
-        val result = db.addUser(name, email, password, userRole)
-        if (result.isSuccess) {
-            val loginResult = db.login(email, password)
-            if (loginResult.isSuccess) {
-                currentUser = loginResult.getOrNull()
-                _authState.value = AuthState.Success(currentUser!!)
+        viewModelScope.launch {
+            val result = withContext(Dispatchers.IO) { db.addUser(name, email, password, userRole) }
+            if (result.isSuccess) {
+                val loginResult = withContext(Dispatchers.IO) { db.login(email, password) }
+                val user = loginResult.getOrNull()
+                if (user != null) {
+                    currentUser = user
+                    _authState.value = AuthState.Success(user)
+                } else {
+                    _authState.value = AuthState.Error("Registered but auto-login failed.")
+                }
             } else {
-                _authState.value = AuthState.Error("Registered but auto-login failed.")
+                _authState.value =
+                    AuthState.Error(result.exceptionOrNull()?.message ?: "Registration failed.")
             }
-        } else {
-            _authState.value = AuthState.Error(result.exceptionOrNull()?.message ?: "Registration failed.")
         }
     }
 
@@ -110,13 +120,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
         return true
     }
+
     fun updateUserRole(newRole: UserRole) {
         val user = currentUser ?: return
-
-        val success = db.updateUserRole(user.id, newRole)
-
-        if (success) {
-            currentUser = user.copy(role = newRole)
+        viewModelScope.launch {
+            val success = withContext(Dispatchers.IO) { db.updateUserRole(user.id, newRole) }
+            if (success) currentUser = user.copy(role = newRole)
         }
+
     }
 }
