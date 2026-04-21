@@ -7,5 +7,6 @@ data class Listing(
     val price: Double,
     val category: String,
     val condition: String,
-    val sellerId: Long
+    val sellerId: Long,
+    val imagePath: String
 )
