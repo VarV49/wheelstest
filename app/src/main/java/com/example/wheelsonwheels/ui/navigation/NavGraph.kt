@@ -1,11 +1,19 @@
 package com.example.wheelsonwheels.ui.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
 import com.example.wheelsonwheels.ui.screens.*
+import com.example.wheelsonwheels.ui.components.NavBar
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
@@ -18,6 +26,8 @@ object Routes {
     const val ORDERS = "orders"
     const val CART = "cart"
     const val BROWSE = "browse"
+
+    const val PROFILE = "profile"
 }
 
 @Composable
@@ -30,85 +40,136 @@ fun NavGraph(
     val listingViewModel: ListingViewModel = viewModel()
     val cartViewModel: CartViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = Routes.LOGIN) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                authViewModel = authViewModel,
-                onLoginSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+    val bottomBarRoutes = setOf(
+        Routes.HOME,
+        Routes.BROWSE,
+        Routes.CART,
+        Routes.PROFILE
+    )
+
+    val showBottomBar = currentRoute in bottomBarRoutes
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar && currentRoute != null) {
+                NavBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route ->
+                        navController.navigate(route) {
+                            launchSingleTop = true
+                            popUpTo(Routes.HOME)
+                        }
                     }
-                },
-                onGoToRegister = { navController.navigate(Routes.REGISTER) }
-            )
+                )
+            }
         }
+    ) { padding ->
 
-        composable(Routes.REGISTER) {
-            RegisterScreen(
-                authViewModel = authViewModel,
-                onRegisterSuccess = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+        NavHost(
+            navController = navController,
+            startDestination = Routes.LOGIN,
+            modifier = Modifier.padding(padding)
+        ) {
+
+            composable(Routes.LOGIN) {
+                LoginScreen(
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onGoToRegister = {
+                        navController.navigate(Routes.REGISTER)
                     }
-                },
-                onGoToLogin = { navController.popBackStack() }
-            )
-        }
+                )
+            }
 
-        composable(Routes.HOME) {
-            HomeScreen(
-                authViewModel = authViewModel,
-                onLogout = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+            composable(Routes.REGISTER) {
+                RegisterScreen(
+                    authViewModel = authViewModel,
+                    onRegisterSuccess = {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
+                    },
+                    onGoToLogin = {
+                        navController.popBackStack()
                     }
-                },
-                onBrowse = { navController.navigate(Routes.BROWSE) },
-                onCart = { navController.navigate(Routes.CART) },
-                onOrders = { navController.navigate(Routes.ORDERS) },
-                onCreateListing = { navController.navigate(Routes.CREATE_LISTING) },
-                isDarkTheme = isDarkTheme,
-                onThemeChange = onThemeChange
-            )
-        }
+                )
+            }
 
-        composable(Routes.CREATE_LISTING) {
-            CreateListingScreen(
-                authViewModel = authViewModel,
-                listingViewModel = listingViewModel,
-                onListingCreated = { navController.popBackStack() },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Routes.BROWSE) {
-            BrowseScreen(
-                authViewModel = authViewModel,
-                cartViewModel = cartViewModel,
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(Routes.CART) {
-            CartScreen(
-                authViewModel = authViewModel,
-                cartViewModel = cartViewModel,
-                onBack = { navController.popBackStack() },
-                onCheckoutSuccess = {
-                    navController.navigate(Routes.ORDERS) {
-                        popUpTo(Routes.CART) { inclusive = true }
+            composable(Routes.HOME) {
+                HomeScreen(
+                    authViewModel = authViewModel,
+                    onBrowse = { navController.navigate(Routes.BROWSE) },
+                    onCart = { navController.navigate(Routes.CART) },
+                    onOrders = { navController.navigate(Routes.ORDERS) },
+                    onCreateListing = { navController.navigate(Routes.CREATE_LISTING) },
+                    isDarkTheme = isDarkTheme,
+                    onThemeChange = onThemeChange,
+                    onLogout = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.HOME) { inclusive = true }
+                        }
                     }
-                }
-            )
-        }
+                )
+            }
 
-        composable(Routes.ORDERS) {
-            OrdersScreen(
-                authViewModel = authViewModel,
-                cartViewModel = cartViewModel,
-                onBack = { navController.popBackStack() }
-            )
+            composable(Routes.CREATE_LISTING) {
+                CreateListingScreen(
+                    authViewModel = authViewModel,
+                    listingViewModel = listingViewModel,
+                    onListingCreated = { navController.popBackStack() },
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.BROWSE) {
+                BrowseScreen(
+                    authViewModel = authViewModel,
+                    cartViewModel = cartViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.CART) {
+                CartScreen(
+                    authViewModel = authViewModel,
+                    cartViewModel = cartViewModel,
+                    onBack = { navController.popBackStack() },
+                    onCheckoutSuccess = {
+                        navController.navigate(Routes.ORDERS) {
+                            popUpTo(Routes.CART) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(Routes.ORDERS) {
+                OrdersScreen(
+                    authViewModel = authViewModel,
+                    cartViewModel = cartViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.PROFILE) {
+                ProfileScreen(
+                    authViewModel = authViewModel,
+                    onOrders = { navController.navigate(Routes.ORDERS) },
+                    isDarkTheme = isDarkTheme,
+                    onThemeChange = onThemeChange,
+                    onLogout = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.HOME) { inclusive = true }
+                        }
+                    }
+                )
+            }
         }
     }
 }
