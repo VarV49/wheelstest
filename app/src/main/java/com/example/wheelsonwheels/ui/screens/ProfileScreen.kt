@@ -16,20 +16,32 @@ import androidx.compose.ui.unit.*
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.ui.components.RoleToggle
 import com.example.wheelsonwheels.ui.theme.AppColors
+import com.example.wheelsonwheels.data.model.UserRole
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 
 @Composable
 fun ProfileScreen(
     authViewModel: AuthViewModel,
     onOrders: () -> Unit,
     onLogout: () -> Unit,
+    onManageUsers: () -> Unit,
+    onManageListings: () -> Unit,
     isDarkTheme: Boolean,
     onThemeChange: (Boolean) -> Unit
 ) {
     val user = authViewModel.currentUser
 
+    // isAdminAccount is true if this user is an admin account, regardless of
+    // which role they're currently browsing as. This drives both the Admin
+    // button in RoleToggle and the Admin Tools section visibility.
+    val isAdminAccount = authViewModel.isAdminAccount
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 28.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -70,9 +82,10 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        // Role switch (still works)
+        // Role toggle — shows Admin button only for admin accounts
         RoleToggle(
             currentRole = user?.role,
+            isAdmin = isAdminAccount,
             onRoleSelected = { role ->
                 authViewModel.updateUserRole(role)
             }
@@ -80,7 +93,6 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Buttons
         Text("Stuff", color = AppColors.GrayMuted)
 
         Spacer(Modifier.height(12.dp))
@@ -92,7 +104,6 @@ fun ProfileScreen(
             Text("Your Orders")
         }
 
-
         Spacer(Modifier.height(32.dp))
 
         // Dark mode toggle
@@ -101,7 +112,6 @@ fun ProfileScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text("Dark Mode")
-
             Switch(
                 checked = isDarkTheme,
                 onCheckedChange = onThemeChange
@@ -113,6 +123,47 @@ fun ProfileScreen(
         HorizontalDivider()
 
         Spacer(Modifier.height(24.dp))
+
+        // Admin Tools — visible whenever this is an admin account,
+        // even if currently browsing as buyer/seller
+        if (isAdminAccount) {
+            Text(
+                text = "Admin Tools",
+                color = AppColors.GrayMuted,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onManageUsers,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.Person, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Manage Users")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = onManageListings,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Icon(Icons.Default.List, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Manage Listings")
+            }
+
+            Spacer(Modifier.height(24.dp))
+        }
 
         // Logout
         OutlinedButton(

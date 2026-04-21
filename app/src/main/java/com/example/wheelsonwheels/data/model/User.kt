@@ -6,5 +6,9 @@ data class User(
     val name: String,
     val email: String,
     val passwordHash: String,
-    val role: UserRole
+    val role: UserRole,
+
+    val isBanned: Boolean = false,
+    val banUntil: Long? = null, // timestamp (null = permanent or not banned)
+    val isAdmin: Boolean = false
 )

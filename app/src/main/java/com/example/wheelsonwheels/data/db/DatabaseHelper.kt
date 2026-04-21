@@ -13,7 +13,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "WheelsOnWheels.db"
-        const val DATABASE_VERSION = 6 // Incremented version for schema change
+        const val DATABASE_VERSION = 11 // Bumped for isAdmin column
 
         const val TABLE_USERS = "users"
         const val COL_USER_ID = "id"
@@ -68,7 +68,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_USER_NAME TEXT NOT NULL,
                 $COL_USER_EMAIL TEXT NOT NULL UNIQUE,
                 $COL_USER_PASSWORD TEXT NOT NULL,
-                $COL_USER_ROLE TEXT NOT NULL
+                $COL_USER_ROLE TEXT NOT NULL,
+                isBanned INTEGER DEFAULT 0,
+                banUntil INTEGER,
+                isAdmin INTEGER DEFAULT 0
             )
         """.trimIndent())
 
@@ -138,7 +141,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    // USER OPERATIONS
+    // ─── USER OPERATIONS ─────────────────────────────────────────────────────
+
     fun addUser(name: String, email: String, password: String, userRole: String): Result<Unit> {
         if (getUserByEmail(email) != null) return Result.failure(Exception("Email already in use."))
         val db = writableDatabase
@@ -147,6 +151,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_USER_EMAIL, email)
             put(COL_USER_PASSWORD, hashPassword(password))
             put(COL_USER_ROLE, userRole)
+            put("isAdmin", 0)
         }
         val res = db.insert(TABLE_USERS, null, values)
         return if (res != -1L) Result.success(Unit) else Result.failure(Exception("Failed to add user."))
@@ -161,7 +166,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 name = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_NAME)),
                 email = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_EMAIL)),
                 passwordHash = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PASSWORD)),
-                role = try { UserRole.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_ROLE)).uppercase()) } catch (e: Exception) { UserRole.BUYER }
+                role = try {
+                    UserRole.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_ROLE)).uppercase())
+                } catch (e: Exception) { UserRole.BUYER },
+                isBanned = cursor.getInt(cursor.getColumnIndexOrThrow("isBanned")) == 1,
+                banUntil = if (cursor.isNull(cursor.getColumnIndexOrThrow("banUntil"))) null
+                else cursor.getLong(cursor.getColumnIndexOrThrow("banUntil")),
+                isAdmin = cursor.getInt(cursor.getColumnIndexOrThrow("isAdmin")) == 1
             )
         } else null
         cursor.close()
@@ -169,9 +180,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun login(email: String, password: String): Result<User> {
-        val user = getUserByEmail(email) ?: return Result.failure(Exception("User not found."))
-        return if (user.passwordHash == hashPassword(password)) Result.success(user)
-        else Result.failure(Exception("Invalid password."))
+        val user = getUserByEmail(email)
+            ?: return Result.failure(Exception("User not found."))
+
+        if (user.isBanned) {
+            val now = System.currentTimeMillis()
+            val banUntil = user.banUntil
+            if (banUntil == null || banUntil > now) {
+                return Result.failure(Exception("User is banned."))
+            }
+        }
+
+        return if (user.passwordHash == hashPassword(password)) {
+            Result.success(user)
+        } else {
+            Result.failure(Exception("Invalid password."))
+        }
     }
 
     fun updateUserRole(userId: Long, newRole: UserRole): Boolean {
@@ -180,7 +204,72 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return db.update(TABLE_USERS, values, "$COL_USER_ID = ?", arrayOf(userId.toString())) > 0
     }
 
-    // LISTING OPERATIONS
+    fun banUser(userId: String, banUntil: Long?) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("isBanned", 1)
+            put("banUntil", banUntil)
+        }
+        db.update(TABLE_USERS, values, "id = ?", arrayOf(userId))
+    }
+
+    fun unbanUser(userId: String) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put("isBanned", 0)
+            putNull("banUntil")
+        }
+        db.update(TABLE_USERS, values, "id = ?", arrayOf(userId))
+    }
+
+    fun getAllUsers(): List<User> {
+        val db = readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_USERS", null)
+        val users = mutableListOf<User>()
+        while (cursor.moveToNext()) {
+            users.add(
+                User(
+                    id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_USER_ID)),
+                    name = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_NAME)),
+                    email = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_EMAIL)),
+                    passwordHash = cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_PASSWORD)),
+                    role = try {
+                        UserRole.valueOf(cursor.getString(cursor.getColumnIndexOrThrow(COL_USER_ROLE)).uppercase())
+                    } catch (e: Exception) { UserRole.BUYER },
+                    isBanned = cursor.getInt(cursor.getColumnIndexOrThrow("isBanned")) == 1,
+                    banUntil = if (cursor.isNull(cursor.getColumnIndexOrThrow("banUntil"))) null
+                    else cursor.getLong(cursor.getColumnIndexOrThrow("banUntil")),
+                    isAdmin = cursor.getInt(cursor.getColumnIndexOrThrow("isAdmin")) == 1
+                )
+            )
+        }
+        cursor.close()
+        return users
+    }
+
+    fun createDefaultAdminIfNeeded() {
+        val db = writableDatabase
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_USERS WHERE $COL_USER_EMAIL = ?",
+            arrayOf("admin@wheels.com")
+        )
+        val exists = cursor.count > 0
+        cursor.close()
+
+        if (!exists) {
+            val values = ContentValues().apply {
+                put(COL_USER_NAME, "Admin")
+                put(COL_USER_EMAIL, "admin@wheels.com")
+                put(COL_USER_PASSWORD, hashPassword("admin123"))
+                put(COL_USER_ROLE, "ADMIN")
+                put("isAdmin", 1) // permanent flag — survives role switches
+            }
+            db.insert(TABLE_USERS, null, values)
+        }
+    }
+
+    // ─── LISTING OPERATIONS ──────────────────────────────────────────────────
+
     fun addListing(listing: Listing): Result<Unit> {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -255,7 +344,30 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         return listings
     }
 
-    // CART OPERATIONS
+    fun updateListing(listing: Listing) {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COL_LISTING_TITLE, listing.title)
+            put(COL_LISTING_DESC, listing.description)
+            put(COL_LISTING_PRICE, listing.price)
+            put(COL_LISTING_CATEGORY, listing.category)
+            put(COL_LISTING_CONDITION, listing.condition)
+            put(COL_LISTING_IMG_PATH, listing.imagePath)
+            // sellerId intentionally not updated — owner never changes
+        }
+        db.update(TABLE_LISTINGS, values, "$COL_LISTING_ID = ?", arrayOf(listing.id.toString()))
+    }
+
+    fun deleteListing(id: Long) {
+        writableDatabase.delete(TABLE_LISTINGS, "$COL_LISTING_ID = ?", arrayOf(id.toString()))
+    }
+
+    fun deleteListingsByUser(userId: Long) {
+        writableDatabase.delete(TABLE_LISTINGS, "$COL_LISTING_SELLER_ID = ?", arrayOf(userId.toString()))
+    }
+
+    // ─── CART OPERATIONS ─────────────────────────────────────────────────────
+
     fun addToCart(userId: Long, listingId: Long, quantity: Long) {
         val db = writableDatabase
         val cursor = db.query(TABLE_CART, null, "$COL_CART_USER_ID = ? AND $COL_CART_LISTING_ID = ?", arrayOf(userId.toString(), listingId.toString()), null, null, null)
@@ -289,16 +401,15 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
     }
 
     fun removeFromCart(userId: Long, listingId: Long) {
-        val db = writableDatabase
-        db.delete(TABLE_CART, "$COL_CART_USER_ID = ? AND $COL_CART_LISTING_ID = ?", arrayOf(userId.toString(), listingId.toString()))
+        writableDatabase.delete(TABLE_CART, "$COL_CART_USER_ID = ? AND $COL_CART_LISTING_ID = ?", arrayOf(userId.toString(), listingId.toString()))
     }
 
     fun clearCart(userId: Long) {
-        val db = writableDatabase
-        db.delete(TABLE_CART, "$COL_CART_USER_ID = ?", arrayOf(userId.toString()))
+        writableDatabase.delete(TABLE_CART, "$COL_CART_USER_ID = ?", arrayOf(userId.toString()))
     }
 
-    // ORDER OPERATIONS
+    // ─── ORDER OPERATIONS ────────────────────────────────────────────────────
+
     fun placeOrder(userId: Long, total: Double, shippingInfo: ShippingInfo, paymentMethod: String, items: List<CartItem>): Long {
         val db = writableDatabase
         db.beginTransaction()

@@ -10,7 +10,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 
 import com.example.wheelsonwheels.ui.screens.*
 import com.example.wheelsonwheels.ui.components.NavBar
@@ -26,8 +25,9 @@ object Routes {
     const val ORDERS = "orders"
     const val CART = "cart"
     const val BROWSE = "browse"
-
     const val PROFILE = "profile"
+    const val MANAGEUSERS = "manage_users"
+    const val MANAGELISTINGS = "manage_listings"
 }
 
 @Composable
@@ -82,9 +82,7 @@ fun NavGraph(
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onGoToRegister = {
-                        navController.navigate(Routes.REGISTER)
-                    }
+                    onGoToRegister = { navController.navigate(Routes.REGISTER) }
                 )
             }
 
@@ -96,9 +94,7 @@ fun NavGraph(
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onGoToLogin = {
-                        navController.popBackStack()
-                    }
+                    onGoToLogin = { navController.popBackStack() }
                 )
             }
 
@@ -161,6 +157,8 @@ fun NavGraph(
                 ProfileScreen(
                     authViewModel = authViewModel,
                     onOrders = { navController.navigate(Routes.ORDERS) },
+                    onManageUsers = { navController.navigate(Routes.MANAGEUSERS) },
+                    onManageListings = { navController.navigate(Routes.MANAGELISTINGS) },
                     isDarkTheme = isDarkTheme,
                     onThemeChange = onThemeChange,
                     onLogout = {
@@ -168,6 +166,21 @@ fun NavGraph(
                             popUpTo(Routes.HOME) { inclusive = true }
                         }
                     }
+                )
+            }
+
+            composable(Routes.MANAGEUSERS) {
+                AdminUsersScreen(
+                    authViewModel = authViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Routes.MANAGELISTINGS) {
+                AdminListingsScreen(
+                    authViewModel = authViewModel,
+                    listingViewModel = listingViewModel,
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
