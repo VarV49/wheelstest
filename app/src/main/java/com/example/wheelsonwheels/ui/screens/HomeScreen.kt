@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -34,13 +35,14 @@ fun HomeScreen(
     onBrowse: () -> Unit,
     onCart: () -> Unit,
     onOrders: () -> Unit,
-    onCreateListing: () -> Unit
+    onCreateListing: () -> Unit,
+    isDarkTheme: Boolean,
+    onThemeChange: (Boolean) -> Unit
 ) {
-    val user = authViewModel.currentUser
     var selectedTab by remember { mutableStateOf(NavTab.HOME) }
 
     Scaffold(
-        containerColor = AppColors.BlackDeep,
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppNavBar(
                 selectedTab = selectedTab,
@@ -60,13 +62,13 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(AppColors.BlackDeep)
+                .background(MaterialTheme.colorScheme.background)
         ) {
             when (selectedTab) {
-                NavTab.HOME    -> HomeTabContent(authViewModel, onLogout, onBrowse, onCart, onOrders, onCreateListing)
+                NavTab.HOME    -> HomeTabContent(authViewModel, onBrowse, onCart, onOrders, onCreateListing)
                 NavTab.SEARCH  -> SearchTabPlaceholder()
                 NavTab.CART    -> CartTabPlaceholder()
-                NavTab.PROFILE -> ProfileTabContent(authViewModel, onLogout)
+                NavTab.PROFILE -> ProfileTabContent(authViewModel, onLogout, isDarkTheme, onThemeChange)
             }
         }
     }
@@ -86,11 +88,11 @@ private fun AppNavBar(
     )
 
     Surface(
-        color = AppColors.BlackCard,
+        color = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
-            .border(BorderStroke(1.dp, AppColors.BlackBorder), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outline), shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
     ) {
         Row(
@@ -161,7 +163,6 @@ private fun NavBarItem(
 @Composable
 private fun HomeTabContent(
     authViewModel: AuthViewModel,
-    onLogout: () -> Unit,
     onBrowse: () -> Unit,
     onCart: () -> Unit,
     onOrders: () -> Unit,
@@ -216,7 +217,7 @@ private fun HomeTabContent(
                             text = user?.name ?: "Collector",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = AppColors.OffWhite,
+                            color = MaterialTheme.colorScheme.onBackground,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -229,7 +230,7 @@ private fun HomeTabContent(
                         modifier = Modifier
                             .border(
                                 1.dp,
-                                if (isSeller) AppColors.RedPrimary else AppColors.BlackBorder,
+                                if (isSeller) AppColors.RedPrimary else MaterialTheme.colorScheme.outline,
                                 RoundedCornerShape(6.dp)
                             )
                             .padding(horizontal = 10.dp, vertical = 5.dp)
@@ -246,7 +247,7 @@ private fun HomeTabContent(
             }
 
             Spacer(Modifier.height(8.dp))
-            HorizontalDivider(color = AppColors.BlackBorder, thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline, thickness = 1.dp)
             Spacer(Modifier.height(28.dp))
 
             Text(
@@ -258,7 +259,7 @@ private fun HomeTabContent(
 
             ModernDashCard("Browse Listings", "Explore the collection",  Icons.Default.Search,       onClick = onBrowse)
             ModernDashCard("My Cart",          "Review selected items",   Icons.Default.ShoppingCart, onClick = onCart)
-            ModernDashCard("My Orders",        "Track your purchases",    Icons.Default.List,         onClick = onOrders)
+            ModernDashCard("My Orders",        "Track your purchases",    Icons.AutoMirrored.Filled.List, onClick = onOrders)
 
             if (user?.role == UserRole.SELLER || user?.role == UserRole.ADMIN) {
                 Spacer(Modifier.height(24.dp))
@@ -286,7 +287,9 @@ private fun HomeTabContent(
 @Composable
 private fun ProfileTabContent(
     authViewModel: AuthViewModel,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    isDarkTheme: Boolean,
+    onThemeChange: (Boolean) -> Unit
 ) {
     val user = authViewModel.currentUser
 
@@ -303,7 +306,7 @@ private fun ProfileTabContent(
             modifier = Modifier
                 .size(80.dp)
                 .clip(RoundedCornerShape(40.dp))
-                .background(AppColors.BlackCard)
+                .background(MaterialTheme.colorScheme.surface)
                 .border(2.dp, AppColors.RedPrimary, RoundedCornerShape(40.dp)),
             contentAlignment = Alignment.Center
         ) {
@@ -317,19 +320,53 @@ private fun ProfileTabContent(
 
         Spacer(Modifier.height(16.dp))
 
-        Text(user?.name ?: "", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = AppColors.OffWhite)
+        Text(user?.name ?: "", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onBackground)
         Text(user?.role?.name ?: "", fontSize = 13.sp, color = AppColors.GrayMuted)
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(32.dp))
 
         RoleToggle(
             currentRole = user?.role,
             onRoleSelected = { role -> authViewModel.updateUserRole(role) }
         )
 
-        Spacer(Modifier.height(40.dp))
+        Spacer(Modifier.height(32.dp))
 
-        HorizontalDivider(color = AppColors.BlackBorder)
+        // Theme Switch
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = AppColors.GrayMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "Dark Mode",
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.W500
+                )
+            }
+            Switch(
+                checked = isDarkTheme,
+                onCheckedChange = onThemeChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = AppColors.RedPrimary,
+                    uncheckedThumbColor = Color.White,
+                    uncheckedTrackColor = AppColors.GrayMuted
+                )
+            )
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.outline)
 
         Spacer(Modifier.height(24.dp))
 
@@ -337,10 +374,10 @@ private fun ProfileTabContent(
             onClick = { authViewModel.logout(); onLogout() },
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(8.dp),
-            border = BorderStroke(1.dp, AppColors.BlackBorder),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = AppColors.GrayMuted)
         ) {
-            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(16.dp))
+            Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(8.dp))
             Text("Log Out", fontWeight = FontWeight.W600, letterSpacing = 0.5.sp)
         }
@@ -371,11 +408,11 @@ private fun ModernDashCard(
     highlight: Boolean = false,
     onClick: () -> Unit
 ) {
-    val bgColor     = if (highlight) AppColors.RedPrimary else AppColors.BlackCard
-    val textColor   = if (highlight) Color.White else AppColors.OffWhite
+    val bgColor     = if (highlight) AppColors.RedPrimary else MaterialTheme.colorScheme.surface
+    val textColor   = if (highlight) Color.White else MaterialTheme.colorScheme.onBackground
     val subColor    = if (highlight) Color.White.copy(alpha = 0.75f) else AppColors.GrayMuted
     val iconTint    = if (highlight) Color.White else AppColors.RedPrimary
-    val iconBg      = if (highlight) Color.White.copy(alpha = 0.15f) else AppColors.BlackBorder
+    val iconBg      = if (highlight) Color.White.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant
     val chevronTint = if (highlight) Color.White.copy(alpha = 0.6f) else AppColors.GrayMuted
 
     Surface(
@@ -383,7 +420,7 @@ private fun ModernDashCard(
         modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
         shape = RoundedCornerShape(10.dp),
         color = bgColor,
-        border = if (!highlight) BorderStroke(1.dp, AppColors.BlackBorder) else null,
+        border = if (!highlight) BorderStroke(1.dp, MaterialTheme.colorScheme.outline) else null,
         tonalElevation = 0.dp
     ) {
         Row(
@@ -404,7 +441,7 @@ private fun ModernDashCard(
                 Text(label, fontWeight = FontWeight.SemiBold, fontSize = 15.sp, color = textColor)
                 Text(sub, fontSize = 12.sp, color = subColor)
             }
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = null, tint = chevronTint, modifier = Modifier.size(18.dp))
+            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = chevronTint, modifier = Modifier.size(18.dp))
         }
     }
 }

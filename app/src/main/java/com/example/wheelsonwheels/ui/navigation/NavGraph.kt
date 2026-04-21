@@ -23,7 +23,9 @@ object Routes {
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
+    isDarkTheme: Boolean,
+    onThemeChange: (Boolean) -> Unit
 ) {
     val listingViewModel: ListingViewModel = viewModel()
     val cartViewModel: CartViewModel = viewModel()
@@ -65,7 +67,9 @@ fun NavGraph(
                 onBrowse = { navController.navigate(Routes.BROWSE) },
                 onCart = { navController.navigate(Routes.CART) },
                 onOrders = { navController.navigate(Routes.ORDERS) },
-                onCreateListing = { navController.navigate(Routes.CREATE_LISTING) }
+                onCreateListing = { navController.navigate(Routes.CREATE_LISTING) },
+                isDarkTheme = isDarkTheme,
+                onThemeChange = onThemeChange
             )
         }
 

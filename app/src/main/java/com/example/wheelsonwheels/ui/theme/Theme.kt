@@ -99,7 +99,7 @@ val AppTypography = Typography(
     ),
     labelLarge = TextStyle(
         fontSize = 13.sp,
-        fontWeight = FontWeight.W600,
+    fontWeight = FontWeight.W600,
         letterSpacing = 0.4.sp
     ),
     labelSmall = TextStyle(
@@ -121,11 +121,10 @@ val AppShapes = Shapes(
 
 @Composable
 fun WheelsOnWheelsTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
-
-    val colors = if (isDarkTheme) DarkColors else LightColors
+    val colors = if (darkTheme) DarkColors else LightColors
 
     MaterialTheme(
         colorScheme = colors,

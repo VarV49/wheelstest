@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.runtime.*
 import androidx.navigation.compose.rememberNavController
 import com.example.wheelsonwheels.ui.navigation.NavGraph
 import com.example.wheelsonwheels.ui.theme.WheelsOnWheelsTheme
@@ -16,11 +17,15 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WheelsOnWheelsTheme {
+            val isDarkThemeState = remember { mutableStateOf(true) }
+            
+            WheelsOnWheelsTheme(darkTheme = isDarkThemeState.value) {
                 val navController = rememberNavController()
                 NavGraph(
                     navController = navController,
-                    authViewModel = authViewModel
+                    authViewModel = authViewModel,
+                    isDarkTheme = isDarkThemeState.value,
+                    onThemeChange = { newValue -> isDarkThemeState.value = newValue }
                 )
             }
         }
