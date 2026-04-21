@@ -13,7 +13,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "WheelsOnWheels.db"
-        const val DATABASE_VERSION = 5 // Incremented version for schema change
+        const val DATABASE_VERSION = 6 // Incremented version for schema change
 
         const val TABLE_USERS = "users"
         const val COL_USER_ID = "id"
@@ -30,6 +30,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_LISTING_CATEGORY = "category"
         const val COL_LISTING_CONDITION = "condition"
         const val COL_LISTING_SELLER_ID = "seller_id"
+        const val COL_LISTING_IMG_PATH = "imagePath"
 
         const val TABLE_CART = "cart"
         const val COL_CART_ID = "id"
@@ -79,7 +80,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_LISTING_PRICE REAL NOT NULL,
                 $COL_LISTING_CATEGORY TEXT NOT NULL,
                 $COL_LISTING_CONDITION TEXT NOT NULL,
-                $COL_LISTING_SELLER_ID INTEGER NOT NULL
+                $COL_LISTING_SELLER_ID INTEGER NOT NULL,
+                $COL_LISTING_IMG_PATH TEXT NOT NULL
             )
         """.trimIndent())
 
@@ -188,6 +190,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             put(COL_LISTING_CATEGORY, listing.category)
             put(COL_LISTING_CONDITION, listing.condition)
             put(COL_LISTING_SELLER_ID, listing.sellerId)
+            put(COL_LISTING_IMG_PATH, listing.imagePath)
         }
         val res = db.insert(TABLE_LISTINGS, null, values)
         return if (res != -1L) Result.success(Unit) else Result.failure(Exception("Failed to add listing."))
@@ -204,7 +207,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
                 category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
                 condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
-                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID)),
+                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_IMG_PATH)),
             )
         } else null
         cursor.close()
@@ -223,7 +227,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
                 category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
                 condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
-                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID)),
+                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_IMG_PATH))
             ))
         }
         cursor.close()
@@ -242,7 +247,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 price = cursor.getDouble(cursor.getColumnIndexOrThrow(COL_LISTING_PRICE)),
                 category = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CATEGORY)),
                 condition = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_CONDITION)),
-                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID))
+                sellerId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LISTING_SELLER_ID)),
+                imagePath = cursor.getString(cursor.getColumnIndexOrThrow(COL_LISTING_IMG_PATH))
             ))
         }
         cursor.close()

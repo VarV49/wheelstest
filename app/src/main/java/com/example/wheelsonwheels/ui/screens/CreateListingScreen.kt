@@ -1,5 +1,8 @@
 package com.example.wheelsonwheels.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,6 +20,7 @@ import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingState
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -157,6 +161,38 @@ fun CreateListingScreen(
             }
         }
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // ----- Image selection -----
+        val context = LocalContext.current
+        var imagePath = ""
+
+        // Set up the launcher to pick an image
+        val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if(uri != null) {
+                imagePath = listingViewModel.saveImageToInternalStorage(context, uri)
+            }
+            else {
+                imagePath = ""
+            }
+        }
+        // image select button
+        Button(onClick = {
+            multiplePhotoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            ) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonColors(MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary,
+                MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary)
+            ) {
+            Text("Select Photo")
+        }
+
+
         if (listingState is ListingState.Error) {
             Text(
                 text = (listingState as ListingState.Error).message,
@@ -179,7 +215,8 @@ fun CreateListingScreen(
                         price.trim(),
                         selectedCategory,
                         selectedCondition,
-                        sellerId
+                        sellerId,
+                        imagePath
                     )
                 },
                 modifier = Modifier.fillMaxWidth()

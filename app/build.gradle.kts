@@ -57,7 +57,8 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 
-
+    // Coil (needed for image loading)
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.compose.material3:material3")
