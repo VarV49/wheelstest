@@ -22,6 +22,7 @@ object Routes {
     const val REGISTER = "register"
     const val HOME = "home"
     const val CREATE_LISTING = "create_listing"
+    const val SELLER_LISTINGS = "seller_listings"
     const val ORDERS = "orders"
     const val CART = "cart"
     const val BROWSE = "browse"
@@ -124,6 +125,14 @@ fun NavGraph(
                 )
             }
 
+            composable(Routes.SELLER_LISTINGS) {
+                SellerListingsScreen(
+                    authViewModel = authViewModel,
+                    listingViewModel = listingViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
             composable(Routes.BROWSE) {
                 BrowseScreen(
                     authViewModel = authViewModel,
@@ -157,6 +166,7 @@ fun NavGraph(
                 ProfileScreen(
                     authViewModel = authViewModel,
                     onOrders = { navController.navigate(Routes.ORDERS) },
+                    onMyListings = { navController.navigate(Routes.SELLER_LISTINGS) },
                     onManageUsers = { navController.navigate(Routes.MANAGEUSERS) },
                     onManageListings = { navController.navigate(Routes.MANAGELISTINGS) },
                     isDarkTheme = isDarkTheme,

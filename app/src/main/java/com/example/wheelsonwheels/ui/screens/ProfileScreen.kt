@@ -9,7 +9,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 
@@ -25,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 fun ProfileScreen(
     authViewModel: AuthViewModel,
     onOrders: () -> Unit,
+    onMyListings: () -> Unit,
     onLogout: () -> Unit,
     onManageUsers: () -> Unit,
     onManageListings: () -> Unit,
@@ -32,10 +32,6 @@ fun ProfileScreen(
     onThemeChange: (Boolean) -> Unit
 ) {
     val user = authViewModel.currentUser
-
-    // isAdminAccount is true if this user is an admin account, regardless of
-    // which role they're currently browsing as. This drives both the Admin
-    // button in RoleToggle and the Admin Tools section visibility.
     val isAdminAccount = authViewModel.isAdminAccount
 
     Column(
@@ -86,9 +82,7 @@ fun ProfileScreen(
         RoleToggle(
             currentRole = user?.role,
             isAdmin = isAdminAccount,
-            onRoleSelected = { role ->
-                authViewModel.updateUserRole(role)
-            }
+            onRoleSelected = { role -> authViewModel.updateUserRole(role) }
         )
 
         Spacer(Modifier.height(24.dp))
@@ -102,6 +96,19 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Your Orders")
+        }
+
+        // My Listings button — only visible when browsing as SELLER
+        if (user?.role == UserRole.SELLER) {
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = onMyListings,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.List, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("My Listings")
+            }
         }
 
         Spacer(Modifier.height(32.dp))
@@ -124,8 +131,7 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Admin Tools — visible whenever this is an admin account,
-        // even if currently browsing as buyer/seller
+        // Admin Tools — visible whenever this is an admin account
         if (isAdminAccount) {
             Text(
                 text = "Admin Tools",
@@ -138,9 +144,7 @@ fun ProfileScreen(
 
             OutlinedButton(
                 onClick = onManageUsers,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(Icons.Default.Person, contentDescription = null)
@@ -152,9 +156,7 @@ fun ProfileScreen(
 
             OutlinedButton(
                 onClick = onManageListings,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Icon(Icons.Default.List, contentDescription = null)
@@ -171,9 +173,7 @@ fun ProfileScreen(
                 authViewModel.logout()
                 onLogout()
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
+            modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
             Icon(Icons.Default.ExitToApp, contentDescription = null)
