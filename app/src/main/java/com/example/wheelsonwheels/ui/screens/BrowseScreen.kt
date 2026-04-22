@@ -1,10 +1,13 @@
 package com.example.wheelsonwheels.ui.screens
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,6 +26,8 @@ import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 import java.io.File
 import com.example.wheelsonwheels.R
+import com.example.wheelsonwheels.ui.theme.AppColors
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,46 +36,62 @@ fun BrowseScreen(
     cartViewModel: CartViewModel,
     onBack: () -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val db = remember { DatabaseHelper(context) }
     var listings by remember { mutableStateOf(emptyList<Listing>()) }
 
     LaunchedEffect(Unit) {
         listings = db.getAllListings()
     }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Browse Listings") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←") 
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Column {
+                    Text(
+                        text = "BROWSE LISTINGS",
+                        color = AppColors.RedPrimary,
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+
+            if (listings.isEmpty()) {
+                item {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("No listings available.")
                     }
                 }
-            )
-        }
-    ) { padding ->
-        if (listings.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No listings available.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            } else {
                 items(listings) { listing ->
                     ListingItem(listing) {
                         val userId = authViewModel.currentUser?.id
                         if (userId != null) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar("${listing.title} added to cart.")
+                            }
                             cartViewModel.addToCart(userId, listing)
                         }
                     }
                 }
             }
         }
+        // added to cart toast
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -78,7 +99,12 @@ fun BrowseScreen(
 fun ListingItem(listing: Listing, onAddToCart: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardColors(
+            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.onSurface,
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant)
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             // for debugging to check if image path is valid

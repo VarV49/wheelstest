@@ -1,6 +1,8 @@
 package com.example.wheelsonwheels.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +17,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.wheelsonwheels.data.model.ShippingInfo
+import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 
@@ -99,21 +102,25 @@ fun CartScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Checkout") },
-                navigationIcon = { IconButton(onClick = onBack) { Text("←") } }
-            )
-        }
-    ) { padding ->
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
+                .padding()
+                .padding(horizontal = 20.dp, vertical = 28.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            Text(
+                text = "CART CHECKOUT",
+                color = AppColors.RedPrimary,
+                style = MaterialTheme.typography.titleSmall
+            )
+            Spacer(Modifier.height(8.dp))
+
             if (cartState?.items.isNullOrEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Your cart is empty")
@@ -132,12 +139,13 @@ fun CartScreen(
                     Text("$${String.format("%.2f", cartState?.total ?: 0.0)}", fontWeight = FontWeight.Bold, fontSize = 20.sp)
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(52.dp))
 
                 // PAYMENT SECTION
                 Text(text = "Please select a payment method", fontWeight = FontWeight.Bold)
                 Box {
-                    OutlinedButton(onClick = { showPaymentMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(onClick = { showPaymentMenu = true },
+                        modifier = Modifier.fillMaxWidth()) {
                         Text(selectedPayment)
                     }
                     DropdownMenu(expanded = showPaymentMenu, onDismissRequest = { showPaymentMenu = false }) {
@@ -183,7 +191,7 @@ fun CartScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(52.dp))
 
                 // BILLING INFO SECTION
                 Text(text = "Billing Information", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

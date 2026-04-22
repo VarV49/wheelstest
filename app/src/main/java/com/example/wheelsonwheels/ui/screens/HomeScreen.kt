@@ -8,6 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.wheelsonwheels.data.model.UserRole
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.ui.theme.AppColors
@@ -59,9 +60,16 @@ fun HomeScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            val quickActionColors = ButtonColors(
+                MaterialTheme.colorScheme.primary,
+                MaterialTheme.colorScheme.onPrimary,
+                MaterialTheme.colorScheme.surface,
+                MaterialTheme.colorScheme.onSurface)
+
             Button(
                 onClick = onBrowse,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = quickActionColors,
             ) {
                 Text("Browse Listings")
             }
@@ -70,7 +78,8 @@ fun HomeScreen(
 
             Button(
                 onClick = onCart,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = quickActionColors
             ) {
                 Text("Cart")
             }
@@ -79,7 +88,8 @@ fun HomeScreen(
 
             Button(
                 onClick = onOrders,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = quickActionColors
             ) {
                 Text("Orders")
             }
@@ -95,7 +105,8 @@ fun HomeScreen(
 
                 Button(
                     onClick = onCreateListing,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = quickActionColors
                 ) {
                     Text("Create Listing")
                 }
