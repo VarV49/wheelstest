@@ -1,8 +1,6 @@
 package com.example.wheelsonwheels.ui.screens
 
-import android.graphics.Paint
 import android.util.Log
-import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,6 +22,7 @@ import com.example.wheelsonwheels.data.model.Listing
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 import java.io.File
+import com.example.wheelsonwheels.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,12 +89,14 @@ fun ListingItem(listing: Listing, onAddToCart: () -> Unit) {
                 modifier = Modifier.size(100.dp)
                     .padding(16.dp, 0.dp, 0.dp, 0.dp)
                     .align(alignment = Alignment.CenterVertically),
-                contentScale = ContentScale.FillWidth
+                contentScale = ContentScale.FillWidth,
+                placeholder = painterResource(R.drawable.wow_placeholder),
+                error = painterResource(R.drawable.wow_placeholder)
             )
             Column(modifier = Modifier.padding(16.dp)
                 .fillMaxWidth()) {
                 Text(text = listing.title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text(text = "Price: $${listing.price}", color = MaterialTheme.colorScheme.primary)
+                Text(text = "Price: $${String.format("%.2f", listing.price)}", color = MaterialTheme.colorScheme.primary)
                 Text(text = "Category: ${listing.category} | Condition: ${listing.condition}")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = listing.description, maxLines = 2)

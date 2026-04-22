@@ -9,7 +9,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
-import com.example.wheelsonwheels.data.model.User
 import com.example.wheelsonwheels.data.model.UserRole
 import androidx.compose.runtime.LaunchedEffect
 
