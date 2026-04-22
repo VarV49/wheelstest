@@ -491,4 +491,37 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         cursor.close()
         return items
     }
+
+    fun deleteUser(userId: Long) {
+        val db = writableDatabase
+
+        // Delete user's listings
+        db.delete(TABLE_LISTINGS, "$COL_LISTING_SELLER_ID = ?", arrayOf(userId.toString()))
+
+        // Delete user's cart items
+        db.delete(TABLE_CART, "$COL_CART_USER_ID = ?", arrayOf(userId.toString()))
+
+        // Delete user's orders (and their order items)
+        val cursor = db.query(
+            TABLE_ORDERS,
+            arrayOf(COL_ORDER_ID),
+            "$COL_ORDER_USER_ID = ?",
+            arrayOf(userId.toString()),
+            null, null, null
+        )
+
+        while (cursor.moveToNext()) {
+            val orderId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ORDER_ID))
+
+            // delete items tied to this order
+            db.delete(TABLE_ORDER_ITEMS, "$COL_OI_ORDER_ID = ?", arrayOf(orderId.toString()))
+        }
+        cursor.close()
+
+        // delete orders
+        db.delete(TABLE_ORDERS, "$COL_ORDER_USER_ID = ?", arrayOf(userId.toString()))
+
+        // finally delete user
+        db.delete(TABLE_USERS, "$COL_USER_ID = ?", arrayOf(userId.toString()))
+    }
 }

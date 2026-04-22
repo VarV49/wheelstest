@@ -190,4 +190,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
         return true
     }
+
+    fun deleteUser(user: User) {
+        db.deleteUser(user.id)
+    }
 }

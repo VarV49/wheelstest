@@ -68,7 +68,7 @@ fun LoginScreen(
                 painter = painterResource(id = R.drawable.wow_launcher),
                 contentDescription = null,
                 modifier = Modifier
-                    .height(90.dp)
+                    .height(200.dp)
                     .padding(bottom = 8.dp),
                 contentScale = ContentScale.Fit
             )
@@ -78,7 +78,7 @@ fun LoginScreen(
             // ── Tagline ───────────────────────────────────────────────────────
             Text(
                 text = "COLLECTOR'S MARKETPLACE",
-                fontSize = 10.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.W700,
                 letterSpacing = 2.5.sp,
                 color = AppColors.GrayMuted
@@ -98,15 +98,15 @@ fun LoginScreen(
 
                     Text(
                         text = "Sign In",
-                        fontSize = 20.sp,
+                        fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
                         color = AppColors.OffWhite
                     )
                     Text(
-                        text = "Welcome back",
-                        fontSize = 13.sp,
+                        text = "Welcome Back!",
+                        fontSize = 15.sp,
                         color = AppColors.GrayMuted,
-                        modifier = Modifier.padding(top = 2.dp, bottom = 20.dp)
+                        modifier = Modifier.padding(top = 10.dp, bottom = 15.dp)
                     )
 
                     // Email field

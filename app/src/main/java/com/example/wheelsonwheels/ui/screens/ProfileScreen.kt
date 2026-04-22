@@ -87,8 +87,6 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        Text("Stuff", color = AppColors.GrayMuted)
-
         Spacer(Modifier.height(12.dp))
 
         Button(
