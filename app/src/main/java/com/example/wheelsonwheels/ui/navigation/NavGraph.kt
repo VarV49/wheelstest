@@ -11,14 +11,26 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 
-import com.example.wheelsonwheels.ui.screens.*
+import com.example.wheelsonwheels.ui.screens.SplashScreen
+import com.example.wheelsonwheels.ui.screens.LoginScreen
+import com.example.wheelsonwheels.ui.screens.RegisterScreen
+import com.example.wheelsonwheels.ui.screens.HomeScreen
+import com.example.wheelsonwheels.ui.screens.CreateListingScreen
+import com.example.wheelsonwheels.ui.screens.SellerListingsScreen
+import com.example.wheelsonwheels.ui.screens.BrowseScreen
+import com.example.wheelsonwheels.ui.screens.CartScreen
+import com.example.wheelsonwheels.ui.screens.OrdersScreen
+import com.example.wheelsonwheels.ui.screens.ProfileScreen
+import com.example.wheelsonwheels.ui.screens.AdminUsersScreen
+import com.example.wheelsonwheels.ui.screens.AdminListingsScreen
+
 import com.example.wheelsonwheels.ui.components.NavBar
-import com.example.wheelsonwheels.viewmodel.AuthState
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 
 object Routes {
+    const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
     const val HOME = "home"
@@ -72,9 +84,18 @@ fun NavGraph(
 
         NavHost(
             navController = navController,
-            startDestination = Routes.LOGIN,
+            startDestination = Routes.SPLASH,
             modifier = Modifier.padding(padding)
         ) {
+            composable(Routes.SPLASH) {
+                SplashScreen(
+                    onVideoFinished = {
+                        navController.navigate(Routes.LOGIN) {
+                            popUpTo(Routes.SPLASH) { inclusive = true }
+                        }
+                    }
+                )
+            }
 
             composable(Routes.LOGIN) {
                 LoginScreen(
