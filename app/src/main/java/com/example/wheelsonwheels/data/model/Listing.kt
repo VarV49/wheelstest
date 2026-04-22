@@ -10,3 +10,6 @@ data class Listing(
     val sellerId: Long,
     val imagePath: String
 )
+
+val categories = listOf("Car", "Track", "Tire", "Accessory", "Other")
+val conditions = listOf("New", "Like New", "Used", "Worn")

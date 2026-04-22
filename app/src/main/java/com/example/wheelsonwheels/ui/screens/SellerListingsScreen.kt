@@ -5,6 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.wheelsonwheels.data.model.Listing
+import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingState
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
@@ -51,15 +53,26 @@ fun SellerListingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 20.dp, vertical = 28.dp)
     ) {
-        Text(
-            text = "My Listings",
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = onBack, Modifier
+                .size(20.dp)
+                .padding(end = 4.dp)) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onBackground,
+                )
+            }
+            Text(
+                text = "MY LISTINGS",
+                color = AppColors.RedPrimary,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(8.dp))
 
         if (listings.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -75,7 +88,7 @@ fun SellerListingsScreen(
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             Text(listing.title, fontWeight = FontWeight.Bold)
-                            Text("$${listing.price}", fontSize = 13.sp)
+                            Text("$${String.format("%.2f", listing.price)}", fontSize = 13.sp)
                             Text("${listing.category} · ${listing.condition}", fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
 

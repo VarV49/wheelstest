@@ -42,13 +42,13 @@ fun HomeScreen(
             Text(
                 text = "WHEELS ON WHEELS",
                 color = AppColors.RedPrimary,
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleMedium
             )
 
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Welcome ${user?.name ?: "User"}",
+                text = "Welcome, ${user?.name ?: "User"}!",
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground
             )

@@ -20,7 +20,12 @@ import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingState
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import coil.compose.AsyncImage
+import com.example.wheelsonwheels.R
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,6 +70,47 @@ fun CreateListingScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+
+        // ----- Image selection -----
+        val context = LocalContext.current
+        var imagePath by remember { mutableStateOf("") }
+
+        AsyncImage(
+            model = File(LocalContext.current.filesDir, imagePath),
+            contentDescription = "Listing Image",
+            modifier = Modifier.size(200.dp)
+                .padding(16.dp, 0.dp, 0.dp, 0.dp)
+                .align(alignment = Alignment.CenterHorizontally),
+            contentScale = ContentScale.FillWidth,
+            placeholder = painterResource(R.drawable.wow_placeholder),
+            error = painterResource(R.drawable.wow_placeholder)
+        )
+
+        // Set up the launcher to pick an image
+        val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia()
+        ) { uri ->
+            if(uri != null) {
+                imagePath = listingViewModel.saveImageToInternalStorage(context, uri)
+            }
+            else {
+                imagePath = ""
+            }
+        }
+        // image select button
+        Button(onClick = {
+            multiplePhotoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            ) },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonColors(MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary,
+                MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary)
+        ) {
+            Text("Select Photo")
+        }
+        Spacer(modifier = Modifier.height(12.dp))
 
         OutlinedTextField(
             value = title,
@@ -160,38 +206,6 @@ fun CreateListingScreen(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // ----- Image selection -----
-        val context = LocalContext.current
-        var imagePath = ""
-
-        // Set up the launcher to pick an image
-        val multiplePhotoPickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickVisualMedia()
-        ) { uri ->
-            if(uri != null) {
-                imagePath = listingViewModel.saveImageToInternalStorage(context, uri)
-            }
-            else {
-                imagePath = ""
-            }
-        }
-        // image select button
-        Button(onClick = {
-            multiplePhotoPickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            ) },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonColors(MaterialTheme.colorScheme.secondary,
-                MaterialTheme.colorScheme.onSecondary,
-                MaterialTheme.colorScheme.secondary,
-                MaterialTheme.colorScheme.onSecondary)
-            ) {
-            Text("Select Photo")
-        }
-
 
         if (listingState is ListingState.Error) {
             Text(

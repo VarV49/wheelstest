@@ -1,16 +1,22 @@
 package com.example.wheelsonwheels.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.wheelsonwheels.data.db.DatabaseHelper
+import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 import java.text.SimpleDateFormat
@@ -26,6 +32,8 @@ fun OrdersScreen(
     val orders by cartViewModel.orders.observeAsState(emptyList())
     val userId = authViewModel.currentUser?.id
     val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
+    val context = LocalContext.current
+    val db = remember { DatabaseHelper(context) }
 
     LaunchedEffect(userId) {
         if (userId != null) {
@@ -33,28 +41,41 @@ fun OrdersScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("My Orders") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Text("←")
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onBack, Modifier
+                        .size(20.dp)
+                        .padding(end = 4.dp)) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground,
+                        )
+                    }
+                    Text(
+                        text = "MY ORDERS",
+                        color = AppColors.RedPrimary,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            }
+            if (orders.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxSize().padding(), contentAlignment = Alignment.Center) {
+                        Text("No orders found.")
                     }
                 }
-            )
-        }
-    ) { padding ->
-        if (orders.isEmpty()) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("No orders found.")
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            } else {
                 items(orders) { order ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -70,11 +91,16 @@ fun OrdersScreen(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = "Total: $${order.total}.00", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                            Text(text = "Ships to: ${order.shippingInfo.address}, ${order.shippingInfo.city}")
+                            Text(text = "Ships to: ${order.shippingInfo.address}, ${order.shippingInfo.city} ${order.shippingInfo.state}")
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = "Items:", fontWeight = FontWeight.SemiBold)
                             order.items.forEach { item ->
-                                Text(text = "• Listing ID: ${item.listingID} (Qty: ${item.quantity})", fontSize = 14.sp)
+                                if(db.getListingById(item.listingID) != null) {
+                                    Text(text = "• Item: ${db.getListingById(item.listingID)?.title} [ID: ${item.listingID} ] (Qty: ${item.quantity})", fontSize = 14.sp)
+                                }
+                                else {
+                                    Text(text = "• Item no longer in our records. [ID: ${item.listingID} ] (Qty: ${item.quantity})", fontSize = 14.sp)
+                                }
                             }
                         }
                     }

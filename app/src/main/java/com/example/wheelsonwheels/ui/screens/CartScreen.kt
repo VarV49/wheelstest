@@ -117,7 +117,7 @@ fun CartScreen(
             Text(
                 text = "CART CHECKOUT",
                 color = AppColors.RedPrimary,
-                style = MaterialTheme.typography.titleSmall
+                style = MaterialTheme.typography.titleMedium
             )
             Spacer(Modifier.height(8.dp))
 
