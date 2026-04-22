@@ -11,6 +11,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +29,7 @@ import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.wheelsonwheels.data.db.DatabaseHelper
 import com.example.wheelsonwheels.data.model.Listing
+import com.example.wheelsonwheels.data.model.UserRole
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 import java.io.File
@@ -40,11 +43,14 @@ import kotlinx.coroutines.launch
 fun BrowseScreen(
     authViewModel: AuthViewModel,
     cartViewModel: CartViewModel,
+    onCreateListing: () -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val db = remember { DatabaseHelper(context) }
     var listings by remember { mutableStateOf(emptyList<Listing>()) }
+
+    val isSeller = authViewModel.currentUser?.role == UserRole.SELLER
 
     // for viewing details
     var showListing by remember { mutableStateOf<Listing?>(null) }
@@ -55,51 +61,65 @@ fun BrowseScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Column {
-                    Text(
-                        text = "BROWSE LISTINGS",
-                        color = AppColors.RedPrimary,
-                        style = MaterialTheme.typography.titleMedium
+    Scaffold(
+        floatingActionButton = {
+            if (isSeller) {
+                FloatingActionButton(
+                    onClick = onCreateListing,
+                    containerColor = AppColors.RedPrimary
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Create Listing",
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
-                    Spacer(Modifier.height(8.dp))
                 }
             }
-
-            if (listings.isEmpty()) {
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        }
+    ) { scaffoldPadding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(scaffoldPadding)
+        ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 item {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text("No listings available.")
+                    Column {
+                        Text(
+                            text = "BROWSE LISTINGS",
+                            color = AppColors.RedPrimary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(Modifier.height(8.dp))
                     }
                 }
-            } else {
-                items(listings) { listing ->
-                    ListingItem(listing,
-                        onAddToCart = {
-                        },
-                        onClicked = {
-                            showListing = listing
+
+                if (listings.isEmpty()) {
+                    item {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("No listings available.")
                         }
-                    )
+                    }
+                } else {
+                    items(listings) { listing ->
+                        ListingItem(listing,
+                            onAddToCart = {},
+                            onClicked = { showListing = listing }
+                        )
+                    }
                 }
             }
         }
-        // added to cart toast
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
+
     showListing?.let { listing ->
         ListingDetailsDialog(
             listing = listing,
@@ -129,12 +149,10 @@ fun ListingItem(listing: Listing, onAddToCart: () -> Unit, onClicked: () -> Unit
             MaterialTheme.colorScheme.onSurface,
             MaterialTheme.colorScheme.surfaceVariant,
             MaterialTheme.colorScheme.onSurfaceVariant),
-        // expand listing details
         onClick = onClicked
     ) {
         Row(modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically) {
-            // for debugging to check if image path is valid
             Log.d("BrowseScreen", listing.imagePath)
             AsyncImage(
                 model = File(LocalContext.current.filesDir, listing.imagePath),
@@ -211,28 +229,18 @@ private fun ListingDetailsDialog(
                 Spacer(Modifier.height(12.dp))
 
                 outlinedBox(listing.title, "Title", 1)
-
                 Spacer(Modifier.height(8.dp))
-
                 outlinedBox(listing.description, "Description", 3)
-
                 Spacer(Modifier.height(8.dp))
-
                 outlinedBox(String.format("$%.2f", listing.price), "Price", 1)
-
                 Spacer(Modifier.height(8.dp))
-
                 outlinedBox(listing.category, "Category", 1)
-
                 Spacer(Modifier.height(8.dp))
-
                 outlinedBox(listing.condition, "Condition", 1)
 
                 Spacer(Modifier.height(12.dp))
 
-                Button(
-                    onClick = onAddToCart
-                ) {
+                Button(onClick = onAddToCart) {
                     Text("Add to Cart")
                 }
             }
@@ -242,7 +250,6 @@ private fun ListingDetailsDialog(
 
 @Composable
 fun outlinedBox(text: String, label: String, minLines: Int) {
-    // just using it to match the edit listing look
     OutlinedTextField(
         value = text,
         minLines = minLines,

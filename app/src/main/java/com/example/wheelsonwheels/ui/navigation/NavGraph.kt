@@ -144,6 +144,7 @@ fun NavGraph(
                 BrowseScreen(
                     authViewModel = authViewModel,
                     cartViewModel = cartViewModel,
+                    onCreateListing = { navController.navigate(Routes.CREATE_LISTING) },
                     onBack = { navController.popBackStack() }
                 )
             }
