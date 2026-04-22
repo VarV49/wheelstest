@@ -13,7 +13,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     companion object {
         const val DATABASE_NAME = "WheelsOnWheels.db"
-        const val DATABASE_VERSION = 11 // Bumped for isAdmin column
+        const val DATABASE_VERSION = 12 // Bumped for quantity removal
 
         const val TABLE_USERS = "users"
         const val COL_USER_ID = "id"
@@ -36,7 +36,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_CART_ID = "id"
         const val COL_CART_USER_ID = "user_id"
         const val COL_CART_LISTING_ID = "listing_id"
-        const val COL_CART_QUANTITY = "quantity"
 
         const val TABLE_ORDERS = "orders"
         const val COL_ORDER_ID = "id"
@@ -58,7 +57,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         const val COL_OI_ID = "id"
         const val COL_OI_ORDER_ID = "order_id"
         const val COL_OI_LISTING_ID = "listing_id"
-        const val COL_OI_QUANTITY = "quantity"
+        const val COL_OI_LISTING_NAME = "listing_name"
+        const val COL_OI_LISTING_PRICE = "listing_price"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -92,8 +92,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
             CREATE TABLE $TABLE_CART (
                 $COL_CART_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_CART_USER_ID INTEGER NOT NULL,
-                $COL_CART_LISTING_ID INTEGER NOT NULL,
-                $COL_CART_QUANTITY INTEGER NOT NULL
+                $COL_CART_LISTING_ID INTEGER NOT NULL
             )
         """.trimIndent())
 
@@ -121,7 +120,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 $COL_OI_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_OI_ORDER_ID INTEGER NOT NULL,
                 $COL_OI_LISTING_ID INTEGER NOT NULL,
-                $COL_OI_QUANTITY INTEGER NOT NULL
+                $COL_OI_LISTING_NAME TEXT,
+                $COL_OI_LISTING_PRICE TEXT
             )
         """.trimIndent())
     }
@@ -368,18 +368,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
 
     // ─── CART OPERATIONS ─────────────────────────────────────────────────────
 
-    fun addToCart(userId: Long, listingId: Long, quantity: Long) {
+    fun addToCart(userId: Long, listingId: Long) {
         val db = writableDatabase
         val cursor = db.query(TABLE_CART, null, "$COL_CART_USER_ID = ? AND $COL_CART_LISTING_ID = ?", arrayOf(userId.toString(), listingId.toString()), null, null, null)
-        if (cursor.moveToFirst()) {
-            val existingQty = cursor.getLong(cursor.getColumnIndexOrThrow(COL_CART_QUANTITY))
-            val values = ContentValues().apply { put(COL_CART_QUANTITY, existingQty + quantity) }
-            db.update(TABLE_CART, values, "$COL_CART_USER_ID = ? AND $COL_CART_LISTING_ID = ?", arrayOf(userId.toString(), listingId.toString()))
-        } else {
+        // only add if not already in cart
+        if (!cursor.moveToFirst()) {
             val values = ContentValues().apply {
                 put(COL_CART_USER_ID, userId)
                 put(COL_CART_LISTING_ID, listingId)
-                put(COL_CART_QUANTITY, quantity)
             }
             db.insert(TABLE_CART, null, values)
         }
@@ -393,11 +389,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         while (cursor.moveToNext()) {
             items.add(CartItem(
                 listingID = cursor.getLong(cursor.getColumnIndexOrThrow(COL_CART_LISTING_ID)),
-                quantity = cursor.getLong(cursor.getColumnIndexOrThrow(COL_CART_QUANTITY))
             ))
         }
         cursor.close()
         return items
+    }
+
+    fun isListingInCart(userId: Long, listingId: Long): Boolean {
+        for (item in getCartItems(userId)) {
+            if(item.listingID == listingId) {
+                return true
+            }
+        }
+        return false
     }
 
     fun removeFromCart(userId: Long, listingId: Long) {
@@ -436,11 +440,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
                 val itemValues = ContentValues().apply {
                     put(COL_OI_ORDER_ID, orderId)
                     put(COL_OI_LISTING_ID, item.listingID)
-                    put(COL_OI_QUANTITY, item.quantity)
+                    put(COL_OI_LISTING_NAME, item.listingName)
+                    // store final price in order table
+                    getListingById(item.listingID)?.let { listing ->
+                        put(COL_OI_LISTING_PRICE, String.format("$%.2f", listing.price))
+                    }
                 }
                 db.insert(TABLE_ORDER_ITEMS, null, itemValues)
             }
             db.delete(TABLE_CART, "$COL_CART_USER_ID = ?", arrayOf(userId.toString()))
+            // items have been purchased, so no longer available
+            for (item in items) {
+                db.delete(TABLE_LISTINGS, "$COL_LISTING_ID = ?", arrayOf(item.listingID.toString()))
+            }
             db.setTransactionSuccessful()
             orderId
         } finally {
@@ -485,7 +497,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(
         while (cursor.moveToNext()) {
             items.add(CartItem(
                 listingID = cursor.getLong(cursor.getColumnIndexOrThrow(COL_OI_LISTING_ID)),
-                quantity = cursor.getLong(cursor.getColumnIndexOrThrow(COL_OI_QUANTITY))
+                listingName = cursor.getString(cursor.getColumnIndexOrThrow(COL_OI_LISTING_NAME)),
+                listingPrice = cursor.getString(cursor.getColumnIndexOrThrow(COL_OI_LISTING_PRICE))
             ))
         }
         cursor.close()

@@ -12,7 +12,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,6 +37,7 @@ import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
 import java.io.File
 import com.example.wheelsonwheels.R
+import com.example.wheelsonwheels.data.model.ListingAttributes
 import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.ListingState
 import kotlinx.coroutines.launch
@@ -61,6 +65,37 @@ fun BrowseScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // SEARCH AND FILTER
+    var searchQuery by remember { mutableStateOf("") }
+
+    var categorySelected by remember { mutableStateOf("Any") }
+    var categoryExpanded by remember { mutableStateOf(false) }
+    var conditionSelected by remember { mutableStateOf("Any") }
+    var conditionExpanded by remember { mutableStateOf(false) }
+    var sortOrder by remember { mutableStateOf("Newest") }
+    var sortExpanded by remember { mutableStateOf(false) }
+
+    val filteredListings = listings.filter { listing ->
+        val searchMatch = listing.title.contains(searchQuery, ignoreCase = true) || listing.description.contains(searchQuery, ignoreCase = true)
+        var categoryMatch = true
+        if(!categorySelected.equals("Any")) {
+            categoryMatch = listing.category.equals(categorySelected)
+        }
+        var conditionMatch = true
+        if(!conditionSelected.equals("Any")) {
+            conditionMatch = listing.condition.equals(conditionSelected)
+        }
+        searchMatch && categoryMatch && conditionMatch
+    }.let { list ->
+        when (sortOrder) {
+            "Price: Low to High" -> list.sortedBy { it.price }
+            "Price: High to Low" -> list.sortedByDescending { it.price }
+            "Newest" -> list.reversed()
+            "Alphabetical" -> list.sortedBy { it.title }
+            else -> list // oldest
+        }
+    }
+
     Scaffold(
         floatingActionButton = {
             if (isSeller) {
@@ -78,7 +113,9 @@ fun BrowseScreen(
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        }
+        },
+        // removes odd padding with scaffold
+        contentWindowInsets = WindowInsets(0, 0, 0, 0)
     ) { scaffoldPadding ->
         Box(
             modifier = Modifier
@@ -100,16 +137,127 @@ fun BrowseScreen(
                         )
                         Spacer(Modifier.height(8.dp))
                     }
+                    // search box
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            label = { Text("Search listings...") },
+                            modifier = Modifier.weight(1f),
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
+                        )
+                        Box {
+                            IconButton(onClick = { sortExpanded = true }) {
+                                Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Sort")
+                            }
+                            DropdownMenu(
+                                expanded = sortExpanded,
+                                onDismissRequest = { sortExpanded = false }
+                            ) {
+                                val sortOptions = listOf("Price: Low to High", "Price: High to Low", "Newest", "Oldest", "Alphabetical")
+                                sortOptions.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            sortOrder = option
+                                            sortExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+                    // filter drop down
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ExposedDropdownMenuBox(
+                            expanded = categoryExpanded,
+                            onExpandedChange = { categoryExpanded = !categoryExpanded },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = categorySelected,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = false,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                label = { Text("Category") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = categoryExpanded,
+                                onDismissRequest = { categoryExpanded = false }
+                            ) {
+                                ListingAttributes.categoriesAll.forEach { cat ->
+                                    DropdownMenuItem(
+                                        text = { Text(cat) },
+                                        onClick = {
+                                            categorySelected = cat
+                                            categoryExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                        ExposedDropdownMenuBox(
+                            expanded = conditionExpanded,
+                            onExpandedChange = { conditionExpanded = !conditionExpanded },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            OutlinedTextField(
+                                value = conditionSelected,
+                                onValueChange = {},
+                                readOnly = true,
+                                enabled = false,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                                    disabledBorderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    disabledLabelColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                label = { Text("Condition") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = conditionExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = conditionExpanded,
+                                onDismissRequest = { conditionExpanded = false }
+                            ) {
+                                ListingAttributes.conditionsAll.forEach { cat ->
+                                    DropdownMenuItem(
+                                        text = { Text(cat) },
+                                        onClick = {
+                                            conditionSelected = cat
+                                            conditionExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
-                if (listings.isEmpty()) {
+                if (filteredListings.isEmpty()) {
                     item {
                         Box(contentAlignment = Alignment.Center) {
                             Text("No listings available.")
                         }
                     }
                 } else {
-                    items(listings) { listing ->
+                    items(filteredListings) { listing ->
                         ListingItem(listing,
                             onAddToCart = {},
                             onClicked = { showListing = listing }
@@ -127,10 +275,18 @@ fun BrowseScreen(
             onAddToCart = {
                 val userId = authViewModel.currentUser?.id
                 if (userId != null) {
-                    scope.launch {
-                        snackbarHostState.showSnackbar("${listing.title} added to cart.")
+                    // no duplicates!!
+                    if(db.isListingInCart(userId, listing.id)) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("${listing.title} already in cart!")
+                        }
                     }
-                    cartViewModel.addToCart(userId, listing)
+                    else {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("${listing.title} added to cart.")
+                        }
+                        cartViewModel.addToCart(userId, listing)
+                    }
                 }
                 showListing = null
             }

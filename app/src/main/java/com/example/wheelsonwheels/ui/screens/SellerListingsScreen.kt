@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.wheelsonwheels.data.model.Listing
+import com.example.wheelsonwheels.data.model.ListingAttributes
 import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingState
@@ -167,9 +168,6 @@ private fun EditListingDialog(
     var categoryExpanded by remember { mutableStateOf(false) }
     var conditionExpanded by remember { mutableStateOf(false) }
 
-    val categories = listOf("Car", "Track", "Tire", "Accessory", "Other")
-    val conditions = listOf("New", "Like New", "Used", "Worn")
-
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -228,7 +226,7 @@ private fun EditListingDialog(
                         expanded = categoryExpanded,
                         onDismissRequest = { categoryExpanded = false }
                     ) {
-                        categories.forEach { cat ->
+                        ListingAttributes.categories.forEach { cat ->
                             DropdownMenuItem(
                                 text = { Text(cat) },
                                 onClick = { selectedCategory = cat; categoryExpanded = false }
@@ -257,7 +255,7 @@ private fun EditListingDialog(
                         expanded = conditionExpanded,
                         onDismissRequest = { conditionExpanded = false }
                     ) {
-                        conditions.forEach { cond ->
+                        ListingAttributes.conditions.forEach { cond ->
                             DropdownMenuItem(
                                 text = { Text(cond) },
                                 onClick = { selectedCondition = cond; conditionExpanded = false }

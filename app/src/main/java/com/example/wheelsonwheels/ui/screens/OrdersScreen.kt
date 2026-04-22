@@ -90,17 +90,12 @@ fun OrdersScreen(
                                 Text(text = dateFormat.format(order.createdAt), fontSize = 12.sp)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(text = "Total: $${order.total}.00", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                            Text(text = "Total: $${String.format("%.2f",order.total)}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                             Text(text = "Ships to: ${order.shippingInfo.address}, ${order.shippingInfo.city} ${order.shippingInfo.state}")
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = "Items:", fontWeight = FontWeight.SemiBold)
                             order.items.forEach { item ->
-                                if(db.getListingById(item.listingID) != null) {
-                                    Text(text = "• Item: ${db.getListingById(item.listingID)?.title} [ID: ${item.listingID} ] (Qty: ${item.quantity})", fontSize = 14.sp)
-                                }
-                                else {
-                                    Text(text = "• Item no longer in our records. [ID: ${item.listingID} ] (Qty: ${item.quantity})", fontSize = 14.sp)
-                                }
+                                Text(text = "• Item: ${item.listingName} [ID: ${item.listingID} ]:   ${item.listingPrice}", fontSize = 14.sp)
                             }
                         }
                     }

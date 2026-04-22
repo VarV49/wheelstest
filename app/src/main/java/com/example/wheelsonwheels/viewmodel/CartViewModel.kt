@@ -11,7 +11,7 @@ import com.example.wheelsonwheels.data.model.Order
 import com.example.wheelsonwheels.data.model.ShippingInfo
 
 data class CartUIState(
-    val items: List<Pair<Listing, Long>> = emptyList(),
+    val items: List<Listing> = emptyList(),
     val total: Double = 0.0,
     val isLoading: Boolean = false,
     val orderSuccess: Boolean = false,
@@ -27,19 +27,20 @@ class CartViewModel(app: Application) : AndroidViewModel(app) {
     private val _orders = MutableLiveData<List<Order>>(emptyList())
     val orders: LiveData<List<Order>> = _orders
 
-    fun addToCart(userId: Long, listing: Listing, quantity: Long = 1) {
-        db.addToCart(userId, listing.id, quantity)
+    fun addToCart(userId: Long, listing: Listing) {
+        db.addToCart(userId, listing.id)
         loadCart(userId)
     }
 
     fun loadCart(userId: Long) {
         _cartState.value = _cartState.value?.copy(isLoading = true)
         val cartItems = db.getCartItems(userId)
-        val itemsWithDetails = cartItems.mapNotNull { item ->
-            db.getListingById(item.listingID)?.let { it to item.quantity }
+        val cartListings = mutableListOf<Listing>()
+        for (item in cartItems) {
+            db.getListingById(item.listingID)?.let { cartListings.add(it) }
         }
-        val total = itemsWithDetails.sumOf { it.first.price * it.second }
-        _cartState.value = CartUIState(items = itemsWithDetails, total = total, isLoading = false)
+        val total = cartListings.sumOf { it.price }
+        _cartState.value = CartUIState(items = cartListings, total = total, isLoading = false)
     }
 
     fun removeFromCart(userId: Long, listingId: Long) {
@@ -52,7 +53,7 @@ class CartViewModel(app: Application) : AndroidViewModel(app) {
         if (currentState.items.isEmpty()) return
 
         _cartState.value = currentState.copy(isLoading = true)
-        val cartItems = currentState.items.map { CartItem(it.first.id, it.second) }
+        val cartItems = currentState.items.map { CartItem(it.id, it.title, String.format("$.2f", it.price)) }
         val orderId = db.placeOrder(userId, currentState.total, shippingInfo, paymentMethod, cartItems)
         
         if (orderId != -1L) {

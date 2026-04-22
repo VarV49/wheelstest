@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import com.example.wheelsonwheels.R
+import com.example.wheelsonwheels.data.model.ListingAttributes
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,9 +45,6 @@ fun CreateListingScreen(
     var conditionExpanded by remember { mutableStateOf(false) }
 
     val listingState by listingViewModel.listingState.observeAsState()
-
-    val categories = listOf("Car", "Track", "Tire", "Accessory", "Other")
-    val conditions = listOf("New", "Like New", "Used", "Worn")
 
     LaunchedEffect(listingState) {
         if (listingState is ListingState.Success) {
@@ -155,13 +153,13 @@ fun CreateListingScreen(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
             )
             ExposedDropdownMenu(
                 expanded = categoryExpanded,
                 onDismissRequest = { categoryExpanded = false }
             ) {
-                categories.forEach { cat ->
+                ListingAttributes.categories.forEach { cat ->
                     DropdownMenuItem(
                         text = { Text(cat) },
                         onClick = {
@@ -189,13 +187,13 @@ fun CreateListingScreen(
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = conditionExpanded) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
             )
             ExposedDropdownMenu(
                 expanded = conditionExpanded,
                 onDismissRequest = { conditionExpanded = false }
             ) {
-                conditions.forEach { cond ->
+                ListingAttributes.conditions.forEach { cond ->
                     DropdownMenuItem(
                         text = { Text(cond) },
                         onClick = {

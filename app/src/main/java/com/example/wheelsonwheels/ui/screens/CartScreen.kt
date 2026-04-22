@@ -6,6 +6,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -16,10 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import com.example.wheelsonwheels.data.model.Listing
 import com.example.wheelsonwheels.data.model.ShippingInfo
 import com.example.wheelsonwheels.ui.theme.AppColors
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
+import kotlinx.coroutines.launch
 
 class PhoneVisualTransformation : VisualTransformation {
     override fun filter(text: AnnotatedString): TransformedText {
@@ -91,6 +97,11 @@ fun CartScreen(
 
     val states = listOf("Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming", "Guam", "Puerto Rico")
 
+    // for confirming removal
+    var removeListing by remember { mutableStateOf<Listing?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(userId) {
         if (userId != null) cartViewModel.loadCart(userId)
     }
@@ -127,10 +138,22 @@ fun CartScreen(
                 }
             } else {
                 Text(text = "Order Summary", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                cartState?.items?.forEach { (listing, quantity) ->
+                cartState?.items?.forEach { listing ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("${listing.title} x $quantity")
-                        Text("$${String.format("%.2f", listing.price * quantity)}")
+                        Text("${listing.title}   -   ")
+                        Text("$${String.format("%.2f", listing.price)}")
+                        Spacer(modifier = Modifier.weight(1f))
+                        IconButton(onClick = {
+                            removeListing = listing
+                        }, Modifier
+                            .size(20.dp)
+                            .padding(end = 4.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = "Delete Listing",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
                 }
                 Divider(Modifier.padding(vertical = 8.dp))
@@ -264,5 +287,61 @@ fun CartScreen(
                 Spacer(modifier = Modifier.height(40.dp))
             }
         }
+        removeListing?.let { listing ->
+            ConfirmRemovalDialog(
+                listing = listing,
+                onDismiss = { removeListing = null },
+                onConfirm = {
+                    val userId = authViewModel.currentUser?.id
+                    if (userId != null) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("${listing.title} removed from cart.")
+                        }
+                        cartViewModel.removeFromCart(userId, listing.id)
+                    }
+                    removeListing = null
+                }
+            )
+        }
     }
 }
+@Composable
+private fun ConfirmRemovalDialog(
+    listing: Listing,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Card(modifier = Modifier.fillMaxWidth(),
+            colors = CardColors(
+                MaterialTheme.colorScheme.surface,
+                MaterialTheme.colorScheme.onSurface,
+                MaterialTheme.colorScheme.surfaceVariant,
+                MaterialTheme.colorScheme.onSurfaceVariant)) {
+            Column(
+                modifier = Modifier
+                    .padding(20.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text("Are you sure you want to remove ${listing.title}?", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+
+                Spacer(Modifier.height(12.dp))
+
+                Row {
+                    Button(onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.onBackground)) {
+                        Text("Keep")
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(onClick = onConfirm) {
+                        Text("Remove")
+                    }
+                }
+
+            }
+        }
+    }
+}
+
