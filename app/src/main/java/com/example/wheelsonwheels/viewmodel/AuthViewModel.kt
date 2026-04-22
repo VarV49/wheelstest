@@ -51,6 +51,11 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // call when switching between login and register screens to clear persistent errors
+    fun onSwitchLoginRegister() {
+        _authState.value = AuthState.Idle
+    }
+
     // ─── Auth ────────────────────────────────────────────────────────────────
 
     fun register(name: String, email: String, password: String, userRole: String) {

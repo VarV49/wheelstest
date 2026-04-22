@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 
 import com.example.wheelsonwheels.ui.screens.*
 import com.example.wheelsonwheels.ui.components.NavBar
+import com.example.wheelsonwheels.viewmodel.AuthState
 import com.example.wheelsonwheels.viewmodel.AuthViewModel
 import com.example.wheelsonwheels.viewmodel.ListingViewModel
 import com.example.wheelsonwheels.viewmodel.CartViewModel
@@ -83,7 +84,10 @@ fun NavGraph(
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onGoToRegister = { navController.navigate(Routes.REGISTER) }
+                    onGoToRegister = {
+                        authViewModel.onSwitchLoginRegister()
+                        navController.navigate(Routes.REGISTER)
+                    }
                 )
             }
 
@@ -95,7 +99,10 @@ fun NavGraph(
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
                     },
-                    onGoToLogin = { navController.popBackStack() }
+                    onGoToLogin = {
+                        authViewModel.onSwitchLoginRegister()
+                        navController.popBackStack()
+                    }
                 )
             }
 
